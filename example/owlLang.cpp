@@ -1,6 +1,6 @@
 #include <iostream>
 #include <vector>
-#include "owlCompiler.hpp"
+#include "../src/owlCompiler.hpp"
 using namespace std;
 
 vector<string> ex1 = {
@@ -44,7 +44,7 @@ vector<string> fibEx = {
 int main(int argc, char* argv[]) {
     OwlCompiler omc;
     OwlMachine ovm;
-    omc.compile(ex2, "fib.owlsm", true);
+    omc.compile(fibEx, "fib.owlsm", true);
     ovm.loadProgram("fib.owlsm");
     ovm.start(false);
     return 0;
