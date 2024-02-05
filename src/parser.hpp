@@ -1,9 +1,9 @@
 #ifndef PARSER_HPP
 #define PARSER_HPP
 #include <iostream>
-#include "Tokens.hpp"
+#include "tokens.hpp"
 #include "lexer.hpp"
-#include "syntaxtree.hpp"
+#include "syntaxTree.hpp"
 using namespace std;
 
 enum errorType {
