@@ -1,0 +1,13 @@
+begin
+    let count := 0;
+    let prev := 0;
+    let curr := 1;
+    let next := 0;
+    while (count < 10) begin
+        print curr;
+        let count := (count + 1);
+        let next := (curr + prev);
+        let prev := curr;
+        let curr := next;
+    end;
+end 
