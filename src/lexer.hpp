@@ -71,14 +71,20 @@ class TokenStream {
         }
 };
 
-class Lexer {
+void printTokenStream(TokenStream& ts) {
+    for (auto it = ts.getStream(); it.hasMore(); it.advance()) {
+        cout<<it.get().lineno<<":   <"<<tokenString[it.get().tokenval]<<", "<<it.get().stringval<<">"<<endl;
+    }
+}
+
+class OwlLexer {
     private:
         TokenType handleKeywordOrId(string word);
         TokenStreamNode* handleSpecials(string word, int& i, int lno);
         int extractFullNumber(string line, int& i);
         TokenStream tokenizeLine(string line, int lno);
     public:
-        Lexer() {
+        OwlLexer() {
 
         }
         TokenStream tokenize(vector<string>& program) {
@@ -92,7 +98,7 @@ class Lexer {
 };
 
 
-TokenType Lexer::handleKeywordOrId(string word) {
+TokenType OwlLexer::handleKeywordOrId(string word) {
     if (word == "begin") {
         return BEGIN;
     } else if (word == "end") {
@@ -120,7 +126,7 @@ TokenType Lexer::handleKeywordOrId(string word) {
     }
 }
 
-TokenStreamNode* Lexer::handleSpecials(string line, int& i, int lno) {
+TokenStreamNode* OwlLexer::handleSpecials(string line, int& i, int lno) {
     Token nextToken;
     nextToken.lineno = lno;
     if (line[i] == '(') {
@@ -211,7 +217,7 @@ TokenStreamNode* Lexer::handleSpecials(string line, int& i, int lno) {
     }
 }
 
-int Lexer::extractFullNumber(string line, int& i) {
+int OwlLexer::extractFullNumber(string line, int& i) {
     string asStr;
     while (isdigit(line[i]))
         asStr.push_back(line[i++]);
@@ -219,7 +225,7 @@ int Lexer::extractFullNumber(string line, int& i) {
     return atoi(asStr.c_str());
 }
 
-TokenStream Lexer::tokenizeLine(string line, int lno) {
+TokenStream OwlLexer::tokenizeLine(string line, int lno) {
     TokenStream tokenStream;
     for (int i = 0; i < line.size(); i++) {
         Token nextToken;

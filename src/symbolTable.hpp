@@ -10,27 +10,37 @@ class SymbolTable {
         struct Entry {
             string varname;
             int address;
+            Entry* next;
+            Entry(string v = "", int a = 0, Entry* n = nullptr) {
+                varname = v;
+                address = a;
+                next = n;
+            }
+        };
+        struct stnode {
+            Entry *entry;
             int ht;
-            Entry* left;
-            Entry* right;
-            Entry(string v, int loc) {
-                varname = v; address = loc; ht = 0;
+            stnode* left;
+            stnode* right;
+            stnode(string v, int loc) {
+                entry = new Entry(v, loc, nullptr);
+                ht = 0;
                 left = right = nullptr;
             }
         };
-        using node = Entry;
+        using node = stnode;
         using link = node*;
         link root;
         int count;
-        int height(Entry* h) { return (h == nullptr) ? -1:(h->ht); }
-        int updatetht(Entry* h) { return 1 + max(height(h->left), height(h->right)); }
+        int height(link h) { return (h == nullptr) ? -1:(h->ht); }
+        int updatetht(link h) { return 1 + max(height(h->left), height(h->right)); }
         link rotL(link h) { 
-            Entry* x = h->right; h->right = x->left; x->left = h; 
+            link x = h->right; h->right = x->left; x->left = h; 
             x->ht = updatetht(x); h->ht = updatetht(h);
             return x; 
         }
         link rotR(link h) { 
-            Entry* x = h->left; h->left = x->right; x->right = h; 
+            link x = h->left; h->left = x->right; x->right = h; 
             x->ht = updatetht(x); h->ht = updatetht(h);
             return x; 
         }
@@ -47,9 +57,11 @@ class SymbolTable {
                 count++;
                 return new node(k, l);
             }
-            if (k == h->varname)
+            if (k == h->entry->varname) {
+                h->entry = new Entry(k, l, h->entry);
                 return h;
-            if (k < h->varname) {
+            }
+            if (k < h->entry->varname) {
                 h->left = put(h->left, k, l);
             } else {
                 h->right = put(h->right, k, l);
@@ -59,15 +71,21 @@ class SymbolTable {
         int get(link h, string v) {
             if (h == nullptr)
                 return -1;
-            if (v == h->varname)
-                return h->address;
-            if (v < h->varname) return get(h->left, v);
+            if (v == h->entry->varname)
+                return h->entry->address;
+            if (v < h->entry->varname) return get(h->left, v);
             else return get(h->right, v);
         }
         void cleanup(link h) {
             if (h != nullptr) {
                 cleanup(h->left);
                 cleanup(h->right);
+                Entry* t = h->entry;
+                while (t != nullptr) {
+                    Entry* x = t;
+                    t = t->next;
+                    delete x;
+                }
                 delete h;
             }
         }

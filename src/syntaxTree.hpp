@@ -60,6 +60,19 @@ void printNode(SyntaxNode* x) {
     }
 }
 
+int mzt = 0;
+void printTree(SyntaxNode* x) {
+    mzt++;
+    while (x != nullptr) {
+        for (int i = 0; i < mzt; i++) cout<<"  ";
+        printNode(x);
+        for (int i = 0; i < MAXCHILD; i++)
+            printTree(x->child[i]);
+        x = x->next;
+    }
+    mzt--;
+}
+
 void traverse(SyntaxNode* x, void (*preOp)(SyntaxNode*), void (*postOp)(SyntaxNode*)) {
     if (x != nullptr) {
         preOp(x);

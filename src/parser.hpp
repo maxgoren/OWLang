@@ -11,9 +11,11 @@ enum errorType {
     UNKNOWNSYMBOL
 };
 
+bool traceParse;
 int ind = 0;
 
 void say(string s) {
+    if (!traceParse) return;
     for (int i = 0; i < ind; i++) cout<<"  ";
     cout<<"("<<ind<<") "<<s<<endl;
 }
@@ -28,7 +30,7 @@ void onExit(string s) {
     --ind;
 }
 
-class Parser {
+class OwlParser {
     private:
         using node = SyntaxNode;
         using link = node*;
@@ -75,16 +77,34 @@ class Parser {
         link term();
         link factor();
     public:
-        Parser(TokenStream ts) {
-            tokenStream = ts;
-            streamIter = tokenStream.getStream();
-        }
-        link parse() {
-            return program();
-        }
+        OwlParser(TokenStream ts, bool trace);
+        OwlParser();
+        link parse();
+        link parse(TokenStream ts, bool trace);
 };
 
-SyntaxNode* Parser::program() {
+OwlParser::OwlParser(TokenStream ts, bool trace) {
+    traceParse = trace;
+    tokenStream = ts;
+    streamIter = tokenStream.getStream();
+}
+
+OwlParser::OwlParser() {
+    traceParse = false;
+}
+
+SyntaxNode* OwlParser::parse() {
+    return program();
+}
+
+SyntaxNode* OwlParser::parse(TokenStream ts, bool trace) {
+    traceParse = trace;
+    tokenStream = ts;
+    streamIter = tokenStream.getStream();
+    return program();
+}
+
+SyntaxNode* OwlParser::program() {
     link t = nullptr;
     onEnter("program");
     t = block();
@@ -92,7 +112,7 @@ SyntaxNode* Parser::program() {
     return t;
 }
 
-SyntaxNode* Parser::block() {
+SyntaxNode* OwlParser::block() {
     link t = nullptr;
     onEnter("block");
     if (match(BEGIN)) {
@@ -102,7 +122,7 @@ SyntaxNode* Parser::block() {
     return t;
 }
 
-SyntaxNode* Parser::statementSequence() {
+SyntaxNode* OwlParser::statementSequence() {
     link t = statement();
     link p = t;
     while (lookahead().tokenval != END) {
@@ -121,21 +141,35 @@ SyntaxNode* Parser::statementSequence() {
     return t;
 }
 
-SyntaxNode* Parser::statement() {
+SyntaxNode* OwlParser::statement() {
     link t = nullptr;
     onEnter("statement");
-    if (lookahead().tokenval == LET) {
-        match(LET);
-        t = assignStatement();
-    }
-    if (lookahead().tokenval == PRINT) {
-        t = printStatement();
+    switch (lookahead().tokenval) {
+        case LET:
+            match(LET);
+            t = assignStatement();
+            break;
+        case WHILE:
+            match(WHILE);
+            t = whileStatement();
+            break;
+        case IF:
+            match(IF);
+            t = ifStatement();
+            break;
+        case PRINT:
+            match(PRINT);
+            t = printStatement();
+            break;
+        default:
+            printError(UNKNOWNSYMBOL);
+            break;
     }
     onExit("statement");
     return t;
 }
 
-SyntaxNode* Parser::assignStatement() {
+SyntaxNode* OwlParser::assignStatement() {
     onEnter("assignStatement");
     link t = makeStatementNode(ASSIGNSTM);
     if (lookahead().tokenval == ID) {
@@ -150,21 +184,46 @@ SyntaxNode* Parser::assignStatement() {
     return t;
 }
 
-SyntaxNode* Parser::printStatement() {
+SyntaxNode* OwlParser::printStatement() {
     link t = makeStatementNode(PRINTSTM);
     onEnter("printStatement");
-    match(PRINT);
     t->child[0] = expression();
     onExit("printStatement");
     return t;
 }
 
-SyntaxNode* Parser::condition() {
+SyntaxNode* OwlParser::whileStatement() {
+    link t = makeStatementNode(WHILESTM);
+    onEnter("whileStatement");
+    t->child[0] = expression();
+    match(BEGIN);
+    t->child[1] = statementSequence();
+    match(END);
+    onExit("whileStatement");
+    return t;
+}
+
+SyntaxNode* OwlParser::ifStatement() {
+    link t = makeStatementNode(IFSTM);
+    onEnter("ifStatement");
+    t->child[0] = expression();
+    match(BEGIN);
+    t->child[1] = statementSequence();
+    if (lookahead().tokenval == ELSE) {
+        match(ELSE);
+        t->child[2] = statementSequence();
+    }
+    match(END);
+    onExit("ifStatement");
+    return t;
+}
+
+SyntaxNode* OwlParser::condition() {
     link t;
     return t;
 }
 
-SyntaxNode* Parser::expression() {
+SyntaxNode* OwlParser::expression() {
     link t = alg_expression();
     onEnter("expression");
     if (lookahead().tokenval == LT || lookahead().tokenval == EQUAL) {
@@ -179,7 +238,7 @@ SyntaxNode* Parser::expression() {
     return t;
 }
 
-SyntaxNode* Parser::alg_expression() {
+SyntaxNode* OwlParser::alg_expression() {
     link t = term();
     onEnter("alg_expression");
     while (lookahead().tokenval == PLUS || lookahead().tokenval == MINUS) {
@@ -194,7 +253,7 @@ SyntaxNode* Parser::alg_expression() {
     return t;
 }
 
-SyntaxNode* Parser::term() {
+SyntaxNode* OwlParser::term() {
     link t;
     onEnter("term");
     t = factor();
@@ -210,7 +269,7 @@ SyntaxNode* Parser::term() {
     return t;
 }
 
-SyntaxNode* Parser::factor() {
+SyntaxNode* OwlParser::factor() {
     link t = nullptr;
     onEnter("factor");
     if (lookahead().tokenval == ID) {

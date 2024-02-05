@@ -2,6 +2,7 @@
 #define owlmachine_hpp
 #include <iostream>
 #include <vector>
+#include <fstream>
 using namespace std;
 
 //lit 0, a load constant a
@@ -17,9 +18,10 @@ class OwlMachine {
         const int MAXADDR = 2047;
         const int MAXNEST = 3;
         enum OM_Inst {
-            lit, opr, lod, sto, cal, inc, jmp, jpc, pri, hlt, nop
-        };
+                                      lit, opr, lod, sto, cal, inc, jmp, jpc, pri, hlt, nop, lbl};
+        vector<string> ominststr = { "lit", "opr", "lod", "sto", "cal", "inc", "jmp", "jpc", "pri", "hlt", "nop", "lbl" };
         OM_Inst getominst(string ins) {
+            if (ins == "LBL") return lbl;
             if (ins == "lit") return lit;
             if (ins == "opr") return opr;
             if (ins == "lod") return lod;
@@ -30,6 +32,7 @@ class OwlMachine {
             if (ins == "jpc") return jpc;
             if (ins == "pri") return pri;
             if (ins == "hlt") return hlt;
+
             return nop;
         }
         struct Instruction {
@@ -42,7 +45,8 @@ class OwlMachine {
                 address = a;
             }
         };
-        vector<Instruction> code;
+        vector<Instruction> codePage;
+        bool loud;
         typedef int REGISTER;
         REGISTER top;
         REGISTER base;
@@ -60,7 +64,6 @@ class OwlMachine {
             return b1;
         }
         void init() {
-            cout<<"Starting OWL machine."<<endl;
             top = 0;
             base = 1;
             pc = 0;
@@ -77,48 +80,68 @@ class OwlMachine {
         }
         void add() {
             top--;
-            cout<<dstack[top]<<" + "<<dstack[top+1];
+            if (loud) cout<<"["<<dstack[top]<<" + "<<dstack[top+1];
             dstack[top] = dstack[top] + dstack[top+1];
-            cout<<", R: "<<dstack[top]<<endl;
+            if (loud) cout<<", R: "<<dstack[top]<<"]"<<endl;
         }
         void sub() {
             top--;
+            if (loud) cout<<dstack[top]<<" - "<<dstack[top+1];
             dstack[top] = dstack[top] - dstack[top+1];
+            if (loud) cout<<", R: "<<dstack[top]<<endl;
         }
         void mul() {
             top--;
+            if (loud) cout<<dstack[top]<<" * "<<dstack[top+1];
             dstack[top] = dstack[top] * dstack[top+1];
+            if (loud) cout<<", R: "<<dstack[top]<<endl;
         }
         void div() {
             top--;
-            dstack[top] = dstack[top] / dstack[top+1];
+            if (loud) cout<<dstack[top]<<" / "<<dstack[top+1];
+            dstack[top] = dstack[top+1] / dstack[top];
+            if (loud) cout<<", R: "<<dstack[top]<<endl;
         }
         void isOdd() {
             dstack[top] = (dstack[top] % 2 == 0);
         }
         void isEqual() {
             top--;
+            if (loud) cout<<dstack[top]<<" == "<<dstack[top+1];
             dstack[top] = (dstack[top] == dstack[top+1]);
+            if (loud) cout<<", R: "<<dstack[top]<<endl;
         }
         void notEqual() {
             top--;
+            if (loud) cout<<dstack[top]<<" != "<<dstack[top+1];
             dstack[top] = (dstack[top] != dstack[top+1]);
+            if (loud) cout<<", R: "<<dstack[top]<<endl;
         }
         void isLess() {
             top--;
+            if (loud) 
+                cout<<"["<<dstack[top+1]<<" < "<<dstack[top];
             dstack[top] = (dstack[top] < dstack[top+1]);
+            if (loud) 
+                cout<<", R: "<<dstack[top]<<"]"<<endl;
         }
         void isGreater() {
             top--;
+            if (loud) cout<<dstack[top]<<" > "<<dstack[top+1];
             dstack[top] = (dstack[top] > dstack[top+1]);
+            if (loud) cout<<", R: "<<dstack[top]<<endl;
         }
         void isLessOrEqual() {
             top--;
+            if (loud) cout<<dstack[top]<<" <= "<<dstack[top+1];
             dstack[top] = (dstack[top] <= dstack[top+1]);
+            if (loud) cout<<", R: "<<dstack[top]<<endl;
         }
         void isGreaterOrEqual() {
             top--;
+            if (loud) cout<<dstack[top]<<" >= "<<dstack[top+1];
             dstack[top] = (dstack[top] > dstack[top+1]);
+            if (loud) cout<<", R: "<<dstack[top]<<endl;
         }
         void doOperation(Instruction curr) {
             switch (curr.address) {
@@ -172,27 +195,32 @@ class OwlMachine {
         OwlMachine() {
             init();
         }
-        void start(bool loud) {
+        void start(bool trace) {
+            loud = trace;
             Instruction curr;
             int i = 0;
+            cout<<code.size()<<endl;
             cout<<"[OWLVM v0.1 Starting...]"<<endl;
             do {
-                curr = code[pc++];
+                curr = codePage[pc++];
                 if (loud)
-                    cout<<"["<<i++<<"]"<<curr.inst<<" "<<curr.level<<", "<<curr.address<<endl;
-                
+                    cout<<"["<<i++<<"][pc: "<<pc<<"]"<<(curr.inst < ominststr.size() ? ominststr[curr.inst]:"LBL")<<" "<<curr.level<<", "<<curr.address<<endl;
                 switch (curr.inst) {
                     case lit: 
+                        if (loud) cout<<"[push "<<curr.address<<"]"<<endl;
                         dstack[++top] = curr.address;
                         break;
-                    case opr: 
+                    case opr:
+                        if (loud) cout<<"[op ]"<<endl;
                         doOperation(curr);
                         break;
                     case lod:
                         top++;
+                        if (loud) cout<<"[load from memory]"<<endl;
                         dstack[top] = dstack[findBase(curr.level) + curr.address];
                         break;
                     case sto:
+                        if (loud) cout<<"[store to memory]"<<endl;
                         dstack[findBase(curr.level) + curr.address] = dstack[top];
                         break;
                     case cal:
@@ -209,15 +237,23 @@ class OwlMachine {
                         pc = curr.address;
                         break;
                     case jpc:
+                        if (loud) cout<<"[jump conditional]"<<endl;
                         if (dstack[top] == 0) {
                             pc = curr.address;
                             top--;
                         }
+                        break;
                     case pri:
+                        if (loud) cout<<"[I/O OUT]"<<endl;
                         cout<<dstack[top]<<endl;
                         break;
                     case hlt: 
+                        cout<<"![HALT]!"<<endl;
                         pc = 0;
+                        break;
+                    case lbl:
+                    case nop:
+                        pc++;
                         break;
                     default:
                         cout<<"!![UNKNOWN INSTRUCTION]!!"<<endl;
@@ -228,7 +264,16 @@ class OwlMachine {
             } while (pc > 0 && pc < code.size());
             cout<<"[OWLVM Done.]"<<endl;
         }
-        void loadProgram(vector<string>& asmCode) {
+        void loadProgram(string filename) {
+            vector<string> asmCode;
+            ifstream infile;
+            infile.open(filename);
+            if (infile.is_open()) {
+                string line;
+                while (getline(infile, line))
+                    asmCode.push_back(line);
+                infile.close();
+            }
             for (string line : asmCode) {
                 if (line.substr(0,2) == "<-") continue;
                 string instr = line.substr(0, 3);
@@ -248,7 +293,7 @@ class OwlMachine {
                     i++;
                 }
                 Instruction next(getominst(instr), atoi(levstr.c_str()), atoi(adrstr.c_str()));
-                code.push_back(next);
+                codePage.push_back(next);
             }
         }
 };
