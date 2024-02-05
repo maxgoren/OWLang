@@ -120,6 +120,37 @@ pri
 you will have a working compiler for owlang that creates
 p-code that is executed on the OWLVM, a stack machine.
 
+```
+#include <iostream>
+#include <vector>
+#include "owlCompiler.hpp"
+using namespace std;
+
+
+int main() {
+    vector<string> owlCode = {
+        "begin", 
+            "let myVar := (15 + 5);",
+            "let myOtherVar := (20 + (30  + 1));",
+            "print myVar;",
+            "print myOtherVar;",
+            "let varb := (myVar + myOtherVar);",
+            "print varb;"
+        "end" 
+    };
+    OwlCompiler omc;
+    omc.compile(owlCode, false);
+}
+max@MaxGorenLaptop:/mnt/c/Users/mgoren/Desktop/codeEx/owlCompiler$ g++ owlEx.cpp -o owlEx
+max@MaxGorenLaptop:/mnt/c/Users/mgoren/Desktop/codeEx/owlCompiler$ ./owlEx
+[OWLVM v0.1 Starting...]
+20
+51
+71
+[OWLVM Done.]
+max@MaxGorenLaptop:/mnt/c/Users/mgoren/Desktop/codeEx/owlCompiler$
+```
+
 You can choose to output which instruction the VM is working on, or just run it normally
 ```
 [OWLVM v0.1 Starting...]
