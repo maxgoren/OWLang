@@ -1,7 +1,7 @@
 #ifndef lexer_hpp
 #define lexer_hpp
 #include <iostream>
-#include "Tokens.hpp"
+#include "tokens.hpp"
 using namespace std;
 
 struct TokenStreamNode {
