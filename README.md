@@ -20,7 +20,7 @@ You can spend a weekend doing the following:
  - Establishing what the language should look like, its key words, and a general syntax.
  - String searching algorithms, Regular Expressions and their relationship to compilers.
  - Lexical analysis/tokenization
-#### our toy language should allow us to do stuff like this   
+#### our toy language should allow us to do stuff like this
 ```
     begin 
         let myVar := (20 + (30  + 1));
@@ -35,6 +35,8 @@ You can spend a weekend doing the following:
       end
     end
 ```
+You'd be surprised how much you can do with just looping, infix integer math, assignment, and if statements.
+procedures, arrays, and structs can be added, but they would take perhaps a long holiday weekend to add them all.
 
 #### By the end of Friday night:
  - The lexer will have been completed providing a useable tokenized representation
