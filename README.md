@@ -18,7 +18,7 @@ String searching algorithms and Regular
 Expressions and their relationship to compilers.
 
 ```
-     begin 
+    begin 
         let myVar := (20 + (30  + 1));
         print myVar;
     end
@@ -34,9 +34,13 @@ of our input language to be used by the parser.
     1:   <ID, myVar>
     1:   <ASSIGN, :=>
     1:   <LPAREN, (>
-    1:   <NUM, 15>
+    1:   <NUM, 20>
     1:   <PLUS, +>
-    1:   <NUM, 5>
+    1:   <LPAREN, (>
+    1:   <NUM, 30>
+    1:   <PLUS, +>
+    1:   <NUM, 1>
+    1:   <RPAREN, )>
     1:   <RPAREN, )>
     1:   <SEMI, ;>   
     2:   <PRINT, print>
@@ -60,6 +64,17 @@ of our input language to be used by the parser.
   The parser will be complete, outputting an abstract syntax tree suitable for use
   with a tree walking interpreter, or for use in generating intermediary code.
 
+```
+    [ASSIGNSTM] myOtherVar, ,
+    [OP_EXPR] , , PLUS
+      [CONST_EXPR] , 20,
+      [OP_EXPR] , , PLUS
+        [CONST_EXPR] , 30,
+        [CONST_EXPR] , 1,
+  [PRINTSTM] , ,
+    [ID_EXPR] myOtherVar, ,
+```
+
 ## Sunday 
 ### Morning:
  - A discussion on interpreters vs compilers.
@@ -69,7 +84,58 @@ of our input language to be used by the parser.
  - Stack Machines contd.
  - Type checking (optional)
  - Code Generation
- 
+
+The code generator can output p-code with or without annotation
+```
+<- push 20
+lit 0, 20
+<- push 30
+lit 0, 30
+<- push 1
+lit 0, 1
+<- add
+opr 0, 2
+<- add
+opr 0, 2
+<- save top of stack to mem address 0
+sto 0, 0
+<- push contents of mem address 0 to top of stack
+lod 0, 0
+pri
+```
+
+same code as above, without optional annotations
+```
+lit 0, 20
+lit 0, 30
+lit 0, 1
+opr 0, 2
+opr 0, 2
+sto 0, 0
+lod 0, 0
+pri
+```
+
 #### By Sunday evening:
 you will have a working compiler for owlang that creates
 p-code that is executed on the OWLVM, a stack machine.
+
+You can choose to output which instruction the VM is working on, or just run it normally
+```
+[OWLVM v0.1 Starting...]
+[0]0 0, 20
+[1]0 0, 30
+[2]0 0, 1
+[3]1 0, 2
+[4]1 0, 2
+[5]3 0, 0
+[6]2 0, 0
+[7]8 0, 0
+51
+[8]9 0, 0
+[OWLVM Done.]
+
+[OWLVM v0.1 Starting...]
+51
+[OWLVM Done.]
+```
