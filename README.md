@@ -12,11 +12,10 @@ The actual "lessons" are still a work in progress, but the "curriculum" is devel
 
  ## Friday 
  ### Evening:
-Establishing what the language should look like
-and its key words, "general syntax".
-String searching algorithms and Regular 
-Expressions and their relationship to compilers.
-
+ - Establishing what the language should look like, its key words, and a general syntax.
+ - String searching algorithms, Regular Expressions and their relationship to compilers.
+ - Lexical analysis/tokenization
+   
 ```
     begin 
         let myVar := (20 + (30  + 1));
@@ -25,8 +24,8 @@ Expressions and their relationship to compilers.
 ```
 
 #### By the end of Friday night:
-The scanner/Lexer will have been completed, providing a useable tokenized representation
-of our input language to be used by the parser.
+ - The lexer will have been completed providing a useable tokenized representation
+of our input language to be used by the parser we will build.
 
 ```
     0:   <BEGIN, begin>
@@ -58,7 +57,8 @@ of our input language to be used by the parser.
  - Parse Trees
 ### Evening:
 - Abstract Syntax Trees.
-- tree-walking interpreters
+- Different uses of AST's
+- a quick aside on tree-walking interpreters
 
 #### By the end of Saturday night:
   The parser will be complete, outputting an abstract syntax tree suitable for use
@@ -84,6 +84,10 @@ of our input language to be used by the parser.
  - Stack Machines contd.
  - Type checking (optional)
  - Code Generation
+
+#### By Sunday evening:
+- you will have a working compiler for owlang that outputs
+p-code that is executed on the OWLVM, a stack machine.
 
 The code generator can output p-code with or without annotation
 ```
@@ -115,10 +119,6 @@ sto 0, 0
 lod 0, 0
 pri
 ```
-
-#### By Sunday evening:
-you will have a working compiler for owlang that creates
-p-code that is executed on the OWLVM, a stack machine.
 
 ```
 #include <iostream>
