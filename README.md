@@ -17,18 +17,44 @@ and its key words, "general syntax".
 String searching algorithms and Regular 
 Expressions and their relationship to compilers.
 
+```
+     begin 
+        let myVar := (20 + (30  + 1));
+        print myVar;
+    end
+```
+
 #### By the end of Friday night:
 The scanner/Lexer will have been completed, providing a useable tokenized representation
 of our input language to be used by the parser.
 
+```
+    0:   <BEGIN, begin>
+    1:   <LET, let>
+    1:   <ID, myVar>
+    1:   <ASSIGN, :=>
+    1:   <LPAREN, (>
+    1:   <NUM, 15>
+    1:   <PLUS, +>
+    1:   <NUM, 5>
+    1:   <RPAREN, )>
+    1:   <SEMI, ;>   
+    2:   <PRINT, print>
+    2:   <ID, myVar>
+    2:   <SEMI, ;>
+    3:   <END, end>
+```
+
 ## Saturday 
 ### Morning:
-More about syntax
-EBNF Grammar
+ - More about syntax
+ - EBNF Grammar
 ### Afternoon:
-Recursive Descent Parsing
+ - Recursive Descent Parsing
+ - Parse Trees
 ### Evening:
-Abstract Syntax Trees.
+- Abstract Syntax Trees.
+- tree-walking interpreters
 
 #### By the end of Saturday night:
   The parser will be complete, outputting an abstract syntax tree suitable for use
