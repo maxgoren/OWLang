@@ -1,11 +1,11 @@
 # OWLang
 OWLang - The "One Weekend" Programming Language Project.
 
-## What is it?
-This is the code repository for the "one weekend" language (owlang) compiler project that I am developing.
-owlang is a toy programming language, meant to teach the fundamentals of programming
-language design, with a focus on compiler implementation, in a relaxed fun way that can be accomplished
-by a someone familiar with programming, but not necessarily compilers, in "one weekend"(YTMV).
+## What is OWLang?
+Besides a hoot of a good time? Owlang is a toy programming language developed for exploring the fundamentals 
+of programming language design with a focus on compiler implementation. The "One Weekend" programming language project
+is intended to help learn the fundamentals of implementing a compiler for a programming language in a relaxed, fun way 
+that can be accomplished by a someone familiar with programming, but not necessarily compilers, in "one weekend"(YTMV).
 
 The actual "lessons" are still a work in progress, but the "curriculum" is developed to be covered in the course of
 *drum roll* one weekend! Starting on Friday evening and wrapping up on sunday and can be followed as such: 
