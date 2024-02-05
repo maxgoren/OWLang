@@ -7,19 +7,32 @@ of programming language design with a focus on compiler implementation. The "One
 is intended to help learn the fundamentals of implementing a compiler for a programming language in a relaxed, fun way 
 that can be accomplished by a someone familiar with programming, but not necessarily compilers, in "one weekend"(YTMV).
 
-The actual "lessons" are still a work in progress, but the "curriculum" is developed to be covered in the course of
-*drum roll* one weekend! Starting on Friday evening and wrapping up on sunday and can be followed as such: 
+
+## Ok, So wheres the "One Weekend" Thing?
+The actual "lessons" are still a work in progress, but the "curriculum" is developed to be covered 
+in the course of *drum roll* one weekend! 
+
+If you have a weekend to kill, and want to learn a bit more about how compilers turn source code into executable programs,
+You can spend a weekend doing the following: 
 
  ## Friday 
  ### Evening:
  - Establishing what the language should look like, its key words, and a general syntax.
  - String searching algorithms, Regular Expressions and their relationship to compilers.
  - Lexical analysis/tokenization
-   
+#### our toy language should allow us to do stuff like this   
 ```
     begin 
         let myVar := (20 + (30  + 1));
-        print myVar;
+       while (myVar >= 1) do
+          print myVar;
+          myVar := myVar / 3;
+       end
+       if (myVar == 1) begin
+         print 1;
+       else
+         print 2;
+      end
     end
 ```
 
