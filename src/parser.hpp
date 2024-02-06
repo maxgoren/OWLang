@@ -71,7 +71,10 @@ class OwlParser {
         link printStatement();
         link whileStatement();
         link ifStatement();
-        link condition();
+        link funcDecl();
+        link paramList();
+        link funcCall();
+        link argList();
         link expression();
         link alg_expression();
         link term();
@@ -197,9 +200,7 @@ SyntaxNode* OwlParser::whileStatement() {
     link t = makeStatementNode(WHILESTM);
     onEnter("whileStatement");
     t->child[0] = expression();
-    match(BEGIN);
-    t->child[1] = statementSequence();
-    match(END);
+    t->child[1] = block();
     onExit("whileStatement");
     return t;
 }
@@ -208,7 +209,7 @@ SyntaxNode* OwlParser::ifStatement() {
     link t = makeStatementNode(IFSTM);
     onEnter("ifStatement");
     t->child[0] = expression();
-    match(BEGIN);
+    match(THEN);
     t->child[1] = statementSequence();
     if (lookahead().tokenval == ELSE) {
         match(ELSE);
@@ -216,11 +217,6 @@ SyntaxNode* OwlParser::ifStatement() {
     }
     match(END);
     onExit("ifStatement");
-    return t;
-}
-
-SyntaxNode* OwlParser::condition() {
-    link t;
     return t;
 }
 

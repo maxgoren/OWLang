@@ -1,28 +1,21 @@
-lit 0, 0
-sto 0, 0
-lit 0, 0
-sto 0, 1
-lit 0, 1
-sto 0, 2
-lit 0, 0
-sto 0, 3
-LBL0:
-lod 0, 2
-pri
-lod 0, 0
-lit 0, 1
-opr 0, 2
-sto 0, 0
-lod 0, 2
-lod 0, 1
-opr 0, 2
-sto 0, 3
-lod 0, 2
-sto 0, 1
-lod 0, 3
-sto 0, 2
-lod 0, 0
-lit 0, 10
+lit 0, 3
+lit 0, 6
 opr 0, 10
-jeq 0, 8
+jpc 0, 7
+lit 0, 42
+pri
+jmp 0, 11
+lit 0, 16
+pri
+lit 0, 33
+pri
+lit 0, 7
+lit 0, 3
+opr 0, 10
+jpc 0, 18
+lit 0, 42
+pri
+jmp 0, 20
+lit 0, 13
+pri
 hlt

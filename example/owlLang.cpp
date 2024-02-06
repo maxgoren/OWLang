@@ -26,13 +26,13 @@ vector<string> ex2 = {
 
 vector<string> ex3 = {
     "program begin",
-    "   if (3 < 6) begin",
+    "   if (3 < 6) then",
     "       print 42;",
     "   else",
     "       print 16;",
     "       print 33;",
     "   end;",
-    "   if (7 < 3) begin",
+    "   if (7 < 3) then",
     "       print 42;",
     "   else",
     "       print 13;",
@@ -59,7 +59,7 @@ vector<string> fibEx = {
 int main(int argc, char* argv[]) {
     OwlCompiler omc;
     OwlMachine ovm;
-    omc.compile(fibEx, "fib.owlsm", true);
+    omc.compile(ex3, "fib.owlsm", true);
     ovm.loadProgram("fib.owlsm");
     ovm.start(false);
     return 0;

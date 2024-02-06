@@ -109,8 +109,8 @@ TokenType OwlLexer::handleKeywordOrId(string word) {
         return PRINT;
     } else if (word == "if") {
         return IF;
-    } else if (word == "do") {
-        return DO;
+    } else if (word == "then") {
+        return THEN;
     } else if (word == "else") {
         return ELSE;
     } else if (word == "endif") {
