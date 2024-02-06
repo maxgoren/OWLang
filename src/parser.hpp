@@ -107,6 +107,7 @@ SyntaxNode* OwlParser::parse(TokenStream ts, bool trace) {
 SyntaxNode* OwlParser::program() {
     link t = nullptr;
     onEnter("program");
+    match(PROG);
     t = block();
     onExit("program");
     return t;

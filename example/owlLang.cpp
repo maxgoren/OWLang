@@ -4,7 +4,7 @@
 using namespace std;
 
 vector<string> ex1 = {
-        "begin", 
+        "program begin", 
             "let myVar := (15 + 5);",
             "let myOtherVar := (20 + (30  + 1));",
             "print myVar;",
@@ -15,7 +15,7 @@ vector<string> ex1 = {
 };
 
 vector<string> ex2 = {
-        "begin",
+        "program begin",
         "   let counter := 1;",
         "   while (counter < 5) begin",
         "       print counter;",
@@ -25,7 +25,7 @@ vector<string> ex2 = {
 };
 
 vector<string> ex3 = {
-    "begin",
+    "program begin",
     "   if (3 < 6) begin",
     "       print 42;",
     "   else",
@@ -41,7 +41,7 @@ vector<string> ex3 = {
 };
 
 vector<string> fibEx = {
-        "begin", 
+        "program begin", 
             "let count := 0;",
             "let prev := 0;",
             "let curr := 1;",

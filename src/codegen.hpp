@@ -118,21 +118,25 @@ void addInstructionToEmit(TokenType tt, string& opstr) {
     }
 }
 
-void buildST(SyntaxNode* x) {
-    if (x->nodeType == STMTNODE) {
-        if (x->_node.stmt == ASSIGNSTM) {
+void assignAddrToVarNames(SyntaxNode* x) {
+    switch (x->nodeKind) {
+        case STMTNODE:
+        if (x->node.stmt == ASSIGNSTM) {
             if (st.find(x->attribute.name) == -1) {
                 st.insert(x->attribute.name, memAddr++);
                 if (loud) cout<<"Assigned variable: "<<x->attribute.name<<" to memory address "<<memAddr - 1<<endl;
             }
         }
         return;
-    }
-    if (x->nodeType == EXPRNODE) {
-        if (x->_node.expr == ID_EXPR) {
-            if (st.find(x->attribute.name) == -1)
-                st.insert(x->attribute.name, memAddr++);
-        }
+    case EXPRNODE:
+            if (x->node.expr == ID_EXPR) {
+                if (st.find(x->attribute.name) == -1) {
+                    st.insert(x->attribute.name, memAddr++);
+                }
+            }
+            break;
+        default:
+            break;
     }
 }
 
@@ -142,7 +146,7 @@ void generateStatement(SyntaxNode* x) {
     string codeIns, while_body_label;
     string if_body_label, else_body_label;
     int s1, s2, cl;
-    switch (x->_node.stmt) {
+    switch (x->node.stmt) {
         case ASSIGNSTM: 
             generate(x->child[0]);
             codeIns = "sto 0, " + to_string(st.find(x->attribute.name));
@@ -191,7 +195,7 @@ void generateStatement(SyntaxNode* x) {
 
 void generateExpression(SyntaxNode* x) {
     string codeIns;
-    switch(x->_node.expr) {
+    switch(x->node.expr) {
         case CONST_EXPR: 
             codeIns = "lit 0, " + to_string(x->attribute.val);
             if (loud) 
@@ -218,9 +222,9 @@ void generateExpression(SyntaxNode* x) {
 void generate(SyntaxNode* x) {
     if (x == nullptr) return;
     string codeIns;
-    if (x->nodeType == EXPRNODE) {
+    if (x->nodeKind == EXPRNODE) {
         generateExpression(x);
-    } else if (x->nodeType == STMTNODE) {
+    } else if (x->nodeKind == STMTNODE) {
         generateStatement(x);
     }
     generate(x->next);
@@ -230,7 +234,7 @@ void generate(SyntaxNode* x) {
 void generateCode(SyntaxNode* x, bool trace) {
     loud = trace;
     init();
-    traverse(x,  &buildST, &nullop);
+    traverse(x,  &assignAddrToVarNames, &nullop);
     generate(x);
     code[codeIndex++] = "hlt";
     for (int i = 0; i < codeIndex; i++)

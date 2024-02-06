@@ -121,6 +121,8 @@ TokenType OwlLexer::handleKeywordOrId(string word) {
         return WHILE;
     } else if (word == "let") {
         return LET;
+    } else if (word == "program") {
+        return PROG;
     } else {
         return ID;
     }
