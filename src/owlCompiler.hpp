@@ -49,7 +49,7 @@ class OwlCompiler {
                 cout<<"\n\n------------------------------\n";
                 cout<<"Phase 2: Code Generation."<<endl;
             }
-            generateCode(ast, loud);
+            generatePCodeFromAST(ast, loud);
             auto owl = getCode();
             ofstream outfile;
             outfile.open(filename);

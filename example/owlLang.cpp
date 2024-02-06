@@ -14,12 +14,18 @@ vector<string> ex1 = {
         "end" 
 };
 
+
+
 vector<string> ex2 = {
         "program begin",
-        "   let counter := 1;",
-        "   while (counter < 5) begin",
-        "       print counter;",
-        "       let counter := (counter + 1);"
+        "   let counter := 2;",
+        "   let m := 0;",
+        "   while (counter < 20) begin",
+        "       let m := (5 * (2 / counter));",
+        "        if (m < 30) then",
+        "         print counter;",
+        "       end",
+        "       let counter := (counter + 1);",
         "   end",
         "end"
 };
@@ -59,7 +65,7 @@ vector<string> fibEx = {
 int main(int argc, char* argv[]) {
     OwlCompiler omc;
     OwlMachine ovm;
-    omc.compile(ex3, "fib.owlsm", true);
+    omc.compile(ex2, "fib.owlsm", true);
     ovm.loadProgram("fib.owlsm");
     ovm.start(false);
     return 0;

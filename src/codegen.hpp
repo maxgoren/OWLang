@@ -7,8 +7,27 @@
 #include "symbolTable.hpp"
 using namespace std;
 
+//API for code generation
+void            generatePCodeFromAST(SyntaxNode* x, bool trace);
+vector<string>  getCode();
 
-void addInstructionToEmit(TokenType tt, string& opstr);
+
+//internal methods for codegen
+void            init();
+void            generate(SyntaxNode* x);
+void            generateExpression(SyntaxNode* x);
+void            generateStatement(SyntaxNode* x);
+
+//methods for outputting P-Code
+void           emit();
+int            emitSkip(int n);
+string         emit_Label();
+void           backUpEmit(int n);
+void           restoreEmit();
+void           addInstructionToEmit(TokenType tt, string& opstr);
+void           assignAddrToVarNames(SyntaxNode* x);
+int            getLabelAddr(string lbl);
+
 SymbolTable st;
 int memAddr = 0;
 bool loud = false;
@@ -140,8 +159,6 @@ void assignAddrToVarNames(SyntaxNode* x) {
     }
 }
 
-void generate(SyntaxNode* x);
-
 void generateStatement(SyntaxNode* x) {
     string codeIns, while_body_label;
     string if_body_label, else_body_label;
@@ -231,7 +248,7 @@ void generate(SyntaxNode* x) {
 }
 
 
-void generateCode(SyntaxNode* x, bool trace) {
+void generatePCodeFromAST(SyntaxNode* x, bool trace) {
     loud = trace;
     init();
     traverse(x,  &assignAddrToVarNames, &nullop);
