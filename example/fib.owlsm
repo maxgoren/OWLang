@@ -9,20 +9,20 @@ sto 0, 3
 LBL0:
 lod 0, 2
 pri
-lit 0, 1
 lod 0, 0
+lit 0, 1
 opr 0, 2
 sto 0, 0
-lod 0, 1
 lod 0, 2
+lod 0, 1
 opr 0, 2
 sto 0, 3
 lod 0, 2
 sto 0, 1
 lod 0, 3
 sto 0, 2
-lit 0, 10
 lod 0, 0
+lit 0, 10
 opr 0, 10
-jpc 0, 8
+jeq 0, 8
 hlt

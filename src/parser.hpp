@@ -125,7 +125,7 @@ SyntaxNode* OwlParser::block() {
 SyntaxNode* OwlParser::statementSequence() {
     link t = statement();
     link p = t;
-    while (lookahead().tokenval != END) {
+    while ((lookahead().tokenval != END) && (lookahead().tokenval != ELSE)) {
         link q = nullptr;
         match(SEMI);
         q = statement();

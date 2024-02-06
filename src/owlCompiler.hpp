@@ -45,8 +45,7 @@ class OwlCompiler {
             ts = lexer.tokenize(codeVec);
             ast = parser.parse(ts, loud);
             if (loud) {
-                //printTokenStream(ts);
-                //printTree(ast);
+                printTree(ast);
                 cout<<"\n\n------------------------------\n";
                 cout<<"Phase 2: Code Generation."<<endl;
             }
