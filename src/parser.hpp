@@ -36,16 +36,20 @@ class OwlParser {
         using link = node*;
         TokenStream tokenStream;
         TokenStreamIter streamIter;
+        SymbolTable procedureNames;
         Token lookahead() {
             return streamIter.get();
         }
         void printError(errorType et) {
+            for (int i = 0; i < ind; i++) cout<<"  ";
             switch (et) {
                 case MISMATCH:
                 case UNKNOWNSYMBOL:
-                    cout<<"Unexpected symbol encountered on line "<<lookahead().lineno<<": "<<lookahead().stringval<<endl;
+                    cout<<" - Unexpected symbol encountered on line "<<lookahead().lineno<<": "<<lookahead().stringval<<endl;
+                    return;
+                    break;
                 default:
-                    cout<<"An unkown error was encountered on line: "<<lookahead().lineno<<endl;
+                    cout<<" - An unkown error was encountered on line: "<<lookahead().lineno<<endl;
 
             }
         }
@@ -122,6 +126,7 @@ SyntaxNode* OwlParser::block() {
     if (match(BEGIN)) {
         t = statementSequence();
     }
+    //match(END);
     onExit("block");
     return t;
 }
@@ -131,14 +136,16 @@ SyntaxNode* OwlParser::statementSequence() {
     link p = t;
     while ((lookahead().tokenval != END) && (lookahead().tokenval != ELSE)) {
         link q = nullptr;
-        match(SEMI);
-        q = statement();
-        if (q != nullptr) {
-            if (t == nullptr) {
-                t = p = q;
-            } else {
-                p->next = q;
-                p = q;
+        if (match(SEMI)) {
+            if (lookahead().tokenval == END) break;
+            q = statement();
+            if (q != nullptr) {
+                if (t == nullptr) {
+                    t = p = q;
+                } else {
+                    p->next = q;
+                    p = q;
+                }
             }
         }
     }
@@ -165,6 +172,13 @@ SyntaxNode* OwlParser::statement() {
             match(PRINT);
             t = printStatement();
             break;
+        case FUNC:
+            match(FUNC);
+            t = funcDecl();
+        case ID:
+            if (procedureNames.find(lookahead().stringval) != -1) {
+                t = funcCall();
+            } else
         default:
             printError(UNKNOWNSYMBOL);
             break;
@@ -200,7 +214,9 @@ SyntaxNode* OwlParser::whileStatement() {
     link t = makeStatementNode(WHILESTM);
     onEnter("whileStatement");
     t->child[0] = expression();
-    t->child[1] = block();
+    match(BEGIN);
+    t->child[1] = statementSequence();
+    match(END);
     onExit("whileStatement");
     return t;
 }
@@ -217,6 +233,61 @@ SyntaxNode* OwlParser::ifStatement() {
     }
     match(END);
     onExit("ifStatement");
+    return t;
+}
+
+SyntaxNode* OwlParser::funcDecl() {
+    onEnter("funcDecl");
+    link t = makeStatementNode(FUNCDECL);
+    t->attribute.name = lookahead().stringval;
+    match(ID);
+    cout<<"Added "<<t->attribute.name<<" to list of procedure names."<<endl;
+    procedureNames.insert(t->attribute.name, 0);
+    match(LPAREN);
+    t->child[0] = paramList();
+    match(RPAREN);
+    t->child[1] = block();
+    onExit("funcDecl");
+    return t;
+}
+
+SyntaxNode* OwlParser::paramList() {
+    onEnter("paramList");
+    link t = factor();
+    link m = t;
+    while (lookahead().tokenval == COMA) {
+        match(COMA);
+        link p = factor();
+        m->next = p;
+        m = p;
+    }
+    onExit("paramList");
+    return t;
+}
+
+SyntaxNode* OwlParser::funcCall() {
+    onEnter("funcCall");
+    link t = makeStatementNode(PROCDCALL);
+    t->attribute.name = lookahead().stringval;
+    match(ID);
+    match(LPAREN);
+    t->child[1] = argList();
+    match(RPAREN);
+    onExit("funcCall");
+    return t;
+}
+
+SyntaxNode* OwlParser::argList() {
+    onEnter("paramList");
+    link t = expression();
+    link m = t;
+    while (lookahead().tokenval == COMA) {
+        match(COMA);
+        link p = expression();
+        m->next = p;
+        m = p;
+    }
+    onExit("paramList");
     return t;
 }
 

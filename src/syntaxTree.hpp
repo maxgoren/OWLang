@@ -6,9 +6,9 @@ enum NodeType {
 };
 
 enum StatementType {
-    IFSTM, ASSIGNSTM, WHILESTM, PRINTSTM,READSTM
+    IFSTM, ASSIGNSTM, WHILESTM, PRINTSTM,READSTM,FUNCDECL, PROCDCALL
 };
-vector<string> StmtTypeStr = { "IFSTM", "ASSIGNSTM", "WHILESTM", "PRINTSTM", "READSTM"};
+vector<string> StmtTypeStr = { "IFSTM", "ASSIGNSTM", "WHILESTM", "PRINTSTM", "READSTM", "FUNCDECL", "PROCDCALL"};
 
 enum ExpressionType {
     CONST_EXPR, OP_EXPR, ID_EXPR
@@ -56,7 +56,10 @@ void printNode(SyntaxNode* x) {
     if (x != nullptr) {
         if (x->nodeKind == EXPRNODE) cout<<"["<<ExprTypeStr[x->node.expr]<<"] ";
         else if (x->nodeKind == STMTNODE) cout<<"["<<StmtTypeStr[x->node.stmt]<<"] ";
-        cout<<((x->attribute.name.size() > 0) ? x->attribute.name:"")<<", "<<((x->attribute.val >= 0) ? to_string(x->attribute.val):"")<<", "<<((x->attribute.op > 0) ? tokenString[x->attribute.op]:"")<<endl;
+        else cout<<"[what?]"<<endl;
+        cout<<((x->attribute.name.size() > 0) ? x->attribute.name:"(unknown)")<<", "<<flush;
+        cout<<((x->attribute.val >= 0) ? to_string(x->attribute.val):"[-0xffff]")<<", "<<flush;
+        cout<<((x->attribute.op > 0) ? tokenString[x->attribute.op]:"[-1]")<<endl;
     }
 }
 

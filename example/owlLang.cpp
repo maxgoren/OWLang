@@ -15,21 +15,6 @@ vector<string> ex1 = {
 };
 
 
-
-vector<string> ex2 = {
-        "program begin",
-        "   let counter := 2;",
-        "   let m := 0;",
-        "   while (counter < 20) begin",
-        "       let m := (5 * (2 / counter));",
-        "        if (m < 30) then",
-        "         print counter;",
-        "       end",
-        "       let counter := (counter + 1);",
-        "   end",
-        "end"
-};
-
 vector<string> ex3 = {
     "program begin",
     "   if (3 < 6) then",
@@ -44,6 +29,15 @@ vector<string> ex3 = {
     "       print 13;",
     "   end;",
     "end"
+};
+
+vector<string> ex4 = {
+        "program begin",
+        "   func helloworld(varA,varB) begin",
+        "         print varA;",
+        "   end;",
+        "   helloworld(1,2);",
+        "end"
 };
 
 vector<string> fibEx = {
@@ -62,12 +56,25 @@ vector<string> fibEx = {
         "end" 
 };
 
+vector<string> loopEx = {
+    "program begin",
+    "   let vara := 2;",
+    "   while (vara < 12) begin",
+    "       let vara := (vara + 1);",
+    "       if (vara < 7) then",
+    "           print vara;",
+    "       end;",
+    "   end;",
+    "end"
+};
+
 int main(int argc, char* argv[]) {
-    OwlCompiler omc;
-    OwlMachine ovm;
-    omc.compile(ex2, "fib.owlsm", true);
-    ovm.loadProgram("fib.owlsm");
-    ovm.start(false);
+        OwlCompiler omc;
+        OwlMachine ovm;
+        omc.compile(fibEx, "fib.owlsm", true);
+        ovm.loadProgram("fib.owlsm");
+        ovm.start(true);
+        cout<<"------------------------"<<endl;
     return 0;
 }
 

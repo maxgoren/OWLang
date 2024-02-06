@@ -43,6 +43,7 @@ class OwlCompiler {
                 cout<<"Phase 1: Lex & Parse."<<endl;
             }
             ts = lexer.tokenize(codeVec);
+            //printTokenStream(ts);
             ast = parser.parse(ts, loud);
             if (loud) {
                 printTree(ast);
@@ -50,6 +51,7 @@ class OwlCompiler {
                 cout<<"Phase 2: Code Generation."<<endl;
             }
             generatePCodeFromAST(ast, loud);
+
             auto owl = getCode();
             ofstream outfile;
             outfile.open(filename);

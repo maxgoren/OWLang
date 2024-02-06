@@ -181,7 +181,6 @@ void generateStatement(SyntaxNode* x) {
             codeIns = "jeq 0, " + to_string(getLabelAddr(while_body_label));
             break;
         case IFSTM:
-            //test
             generate(x->child[0]);
             s1 = emitSkip(1);
             generate(x->child[1]);
@@ -202,6 +201,10 @@ void generateStatement(SyntaxNode* x) {
         case PRINTSTM:
             generate(x->child[0]);
             codeIns = "pri"; 
+            break;
+        case FUNCDECL:
+            break;
+        case PROCDCALL:
             break;
         default:
             cout<<"[!! WHAT? !!]"<<endl;
