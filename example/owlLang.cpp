@@ -1,6 +1,6 @@
 #include <iostream>
 #include <vector>
-#include "owlCompiler.hpp"
+#include "../src/owlCompiler.hpp"
 using namespace std;
 
 vector<string> ex1 = {
@@ -17,12 +17,27 @@ vector<string> ex1 = {
 vector<string> ex2 = {
         "begin",
         "   let counter := 1;",
-        "   while (counter < 120) begin",
+        "   while (counter < 5) begin",
         "       print counter;",
-        "       let counter := (counter * 5);"
-        "       let counter := (counter / 2);"
+        "       let counter := (counter + 1);"
         "   end",
         "end"
+};
+
+vector<string> ex3 = {
+    "begin",
+    "   if (3 < 6) begin",
+    "       print 42;",
+    "   else",
+    "       print 16;",
+    "       print 33;",
+    "   end;",
+    "   if (7 < 3) begin",
+    "       print 42;",
+    "   else",
+    "       print 13;",
+    "   end;",
+    "end"
 };
 
 vector<string> fibEx = {
@@ -44,7 +59,7 @@ vector<string> fibEx = {
 int main(int argc, char* argv[]) {
     OwlCompiler omc;
     OwlMachine ovm;
-    omc.compile(ex2, "fib.owlsm", true);
+    omc.compile(fibEx, "fib.owlsm", true);
     ovm.loadProgram("fib.owlsm");
     ovm.start(false);
     return 0;

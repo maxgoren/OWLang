@@ -14,9 +14,11 @@ int memAddr = 0;
 bool loud = false;
 vector<string> code(1000);
 int codeIndex;
+int highCI;
 
 void init() {
     codeIndex = 0;
+    highCI = 0;
 }
 
 vector<string> getCode() {
@@ -45,20 +47,27 @@ int getLabelAddr(string l) {
 }
 
 void emit(string s) {
-    if (loud) cout<<s<<endl;
+    if (loud) cout<<"codeIndex: "<<codeIndex<<", "<<s<<endl;
     if (s[0] == '<' && s[1] == '-') return;
     code[codeIndex++] = s;
+    if (codeIndex > highCI) highCI = codeIndex;
 }
 
 int emitSkip(int places) {
-    int i = code.size();
-    for (int n = 0; n < places; n++)
-        code[codeIndex++] = "<- SKIP";
+    int i = codeIndex;
+    codeIndex += places;
+    if (highCI < codeIndex) highCI = codeIndex;
+    cout<<"Emit Skip at: "<<i<<", new CI: "<<codeIndex<<endl;
     return i;
 }
 
-void backUp(int addr) {
+void backUpEmit(int addr) {
+    if (addr > highCI) cout<<"Something screwy going on..."<<endl;
     codeIndex = addr;
+}
+
+void restoreEmit() {
+    codeIndex = highCI;
 }
 
 void addInstructionToEmit(TokenType tt, string& opstr) {
@@ -130,7 +139,9 @@ void buildST(SyntaxNode* x) {
 void generate(SyntaxNode* x);
 
 void generateStatement(SyntaxNode* x) {
-    string codeIns, tmpl;
+    string codeIns, while_body_label;
+    string if_body_label, else_body_label;
+    int s1, s2, cl;
     switch (x->_node.stmt) {
         case ASSIGNSTM: 
             generate(x->child[0]);
@@ -138,19 +149,34 @@ void generateStatement(SyntaxNode* x) {
             if (loud) emit("<- save top of stack to mem address " + to_string(st.find(x->attribute.name)));
             break;
         case WHILESTM:
-            tmpl = emit_Label();
-            cout<<"Added Label: "<<tmpl<<endl;
-            emit("<- loop body");
-            generate(x->child[1]);
+            while_body_label = emit_Label();
+            cout<<"Added Label: "<<while_body_label<<endl;
+            s1 = emitSkip(0);
             emit("<- test condition");
+            generate(x->child[1]);
+            emit("<- loop body");
             generate(x->child[0]);
             emit("<- jump back to test.");
-            codeIns = "jpc 0, " + to_string(getLabelAddr(tmpl));
+            codeIns = "jeq 0, " + to_string(getLabelAddr(while_body_label));
             break;
         case IFSTM:
+            //test
             generate(x->child[0]);
+            s1 = emitSkip(1);
             generate(x->child[1]);
+            s2 = emitSkip(1);
+            cl = emitSkip(0);
+            backUpEmit(s1);
+            codeIns = "jpc 0, " + to_string(cl);
+            emit(codeIns);
+            restoreEmit();
             generate(x->child[2]);
+            cl = emitSkip(0);
+            backUpEmit(s2);
+            codeIns = "jmp 0, " + to_string(cl);
+            emit(codeIns);
+            restoreEmit();
+            return;
             break;
         case PRINTSTM:
             generate(x->child[0]);
@@ -177,8 +203,8 @@ void generateExpression(SyntaxNode* x) {
                 emit("<- push contents of mem address " + to_string(st.find(x->attribute.name)) + " to top of stack");
             break;
         case OP_EXPR: 
-            generate(x->child[1]);
             generate(x->child[0]);
+            generate(x->child[1]);
             codeIns = "opr 0, ";
             addInstructionToEmit(x->attribute.op, codeIns);
             break;
@@ -207,6 +233,8 @@ void generateCode(SyntaxNode* x, bool trace) {
     traverse(x,  &buildST, &nullop);
     generate(x);
     code[codeIndex++] = "hlt";
+    for (int i = 0; i < codeIndex; i++)
+        cout<<code[i]<<endl;
 }
 
 #endif

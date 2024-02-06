@@ -18,8 +18,8 @@ class OwlMachine {
         const int MAXADDR = 2047;
         const int MAXNEST = 3;
         enum OM_Inst {
-                                      lit, opr, lod, sto, cal, inc, jmp, jpc, pri, hlt, nop, lbl};
-        vector<string> ominststr = { "lit", "opr", "lod", "sto", "cal", "inc", "jmp", "jpc", "pri", "hlt", "nop", "lbl" };
+                                      lit, opr, lod, sto, cal, inc, jmp, jpc, jeq, pri, hlt, nop, lbl};
+        vector<string> ominststr = { "lit", "opr", "lod", "sto", "cal", "inc", "jmp", "jpc", "jeq", "pri", "hlt", "nop", "lbl" };
         OM_Inst getominst(string ins) {
             if (ins == "LBL") return lbl;
             if (ins == "lit") return lit;
@@ -32,6 +32,7 @@ class OwlMachine {
             if (ins == "jpc") return jpc;
             if (ins == "pri") return pri;
             if (ins == "hlt") return hlt;
+            if (ins == "jeq") return jeq;
 
             return nop;
         }
@@ -120,7 +121,7 @@ class OwlMachine {
         void isLess() {
             top--;
             if (loud) 
-                cout<<"["<<dstack[top+1]<<" < "<<dstack[top];
+                cout<<"["<<dstack[top]<<" < "<<dstack[top+1];
             dstack[top] = (dstack[top] < dstack[top+1]);
             if (loud) 
                 cout<<", R: "<<dstack[top]<<"]"<<endl;
@@ -239,6 +240,13 @@ class OwlMachine {
                     case jpc:
                         if (loud) cout<<"[jump conditional]"<<endl;
                         if (dstack[top] == 0) {
+                            pc = curr.address;
+                            top--;
+                        }
+                        break;
+                    case jeq:
+                        if (loud) cout<<"[jump conditional]"<<endl;
+                        if (dstack[top] == 1) {
                             pc = curr.address;
                             top--;
                         }
