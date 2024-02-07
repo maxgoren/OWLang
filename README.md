@@ -22,7 +22,7 @@ You can spend a weekend doing the following:
  - Lexical analysis/tokenization
 #### our toy language should allow us to do stuff like this
 ```
-    begin 
+    program begin 
         let myVar := (20 + (30  + 1));
        while (myVar >= 1) do
           print myVar;
@@ -36,7 +36,7 @@ You can spend a weekend doing the following:
     end
 ```
 You'd be surprised how much you can do with just looping, infix integer math, assignment, and if statements.
-procedures, arrays, and structs can be added, but they would take perhaps a long holiday weekend to add them all.
+If you have a _long_ weekend at your disposalm, Procedures, arrays, and structs are fun additions.
 
 #### By the end of Friday night:
  - The lexer will have been completed providing a useable tokenized representation
