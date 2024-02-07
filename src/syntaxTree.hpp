@@ -58,8 +58,8 @@ void printNode(SyntaxNode* x) {
         else if (x->nodeKind == STMTNODE) cout<<"["<<StmtTypeStr[x->node.stmt]<<"] ";
         else cout<<"[what?]"<<endl;
         cout<<((x->attribute.name.size() > 0) ? x->attribute.name:"(unknown)")<<", "<<flush;
-        cout<<((x->attribute.val >= 0) ? to_string(x->attribute.val):"[-0xffff]")<<", "<<flush;
-        cout<<((x->attribute.op > 0) ? tokenString[x->attribute.op]:"[-1]")<<endl;
+        cout<<((x->attribute.val >= 0) ? to_string(x->attribute.val):"[0xff]")<<", "<<flush;
+        cout<<((x->attribute.op > 0) ? tokenString[x->attribute.op]:"[0xff]")<<endl;
     }
 }
 

@@ -34,6 +34,7 @@ class OwlParser {
     private:
         using node = SyntaxNode;
         using link = node*;
+        int matchFail;
         TokenStream tokenStream;
         TokenStreamIter streamIter;
         SymbolTable procedureNames;
@@ -58,6 +59,11 @@ class OwlParser {
                 say("Match: " + lookahead().stringval);                
                 streamIter.advance();
                 return true;
+            }
+            matchFail++;
+            if (matchFail > 5) {
+                cout<<"Too many mismatches, bailing out."<<endl;
+                exit(0);
             }
             return false;
         }
@@ -91,6 +97,7 @@ class OwlParser {
 };
 
 OwlParser::OwlParser(TokenStream ts, bool trace) {
+    matchFail = 0;
     traceParse = trace;
     tokenStream = ts;
     streamIter = tokenStream.getStream();
@@ -98,6 +105,7 @@ OwlParser::OwlParser(TokenStream ts, bool trace) {
 
 OwlParser::OwlParser() {
     traceParse = false;
+    matchFail = 0;
 }
 
 SyntaxNode* OwlParser::parse() {
@@ -126,7 +134,7 @@ SyntaxNode* OwlParser::block() {
     if (match(BEGIN)) {
         t = statementSequence();
     }
-    //match(END);
+    match(END);
     onExit("block");
     return t;
 }

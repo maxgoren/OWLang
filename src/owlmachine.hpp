@@ -59,6 +59,7 @@ class OwlMachine {
         int findBase(int level) {
             int b1 = base;
             while (level > 0) {
+                cout<<b1<<"? "<<endl;
                 b1 = dstack[b1];
                 level--;
             }
@@ -192,6 +193,13 @@ class OwlMachine {
                     break;
             }
         }
+        void printStack() {
+            cout<<"STACK: [ ";
+            for (int i = 0; i < top; i++) {
+                cout<<dstack[i]<<", ";
+            }
+            cout<<"] base: "<<base<<", pc: "<<pc<<", top: "<<top<<endl;
+        }
     public:
         OwlMachine() {
             init();
@@ -200,12 +208,13 @@ class OwlMachine {
             loud = trace;
             Instruction curr;
             int i = 0;
-            cout<<code.size()<<endl;
             cout<<"[OWLVM v0.1 Starting...]"<<endl;
             do {
                 curr = codePage[pc++];
-                if (loud)
-                    cout<<"["<<i++<<"][pc: "<<pc<<"]"<<(curr.inst < ominststr.size() ? ominststr[curr.inst]:"LBL")<<" "<<curr.level<<", "<<curr.address<<endl;
+                if (loud) {
+                    cout<<"[pc: "<<pc<<"]"<<(curr.inst < ominststr.size() ? ominststr[curr.inst]:"LBL")<<" , addr: "<<curr.address<<", ";
+                    printStack();
+                }
                 switch (curr.inst) {
                     case lit: 
                         if (loud) cout<<"[push "<<curr.address<<"]"<<endl;
@@ -217,25 +226,31 @@ class OwlMachine {
                         break;
                     case lod:
                         top++;
-                        if (loud) cout<<"[load from memory]"<<endl;
-                        dstack[top] = dstack[findBase(curr.level) + curr.address];
+                        if (loud) cout<<"[load from memory addr: "<<curr.address<<"("<<findBase(curr.level) + curr.address<<")]: ";
+                        dstack[top] = dstack[curr.address];
+                        if (loud) cout<<dstack[top]<<endl;
                         break;
                     case sto:
                         if (loud) cout<<"[store to memory]"<<endl;
-                        dstack[findBase(curr.level) + curr.address] = dstack[top];
+                        dstack[curr.address] = dstack[top];
                         break;
                     case cal:
+                        if (loud) cout<<"[cal]"<<endl;
                         dstack[top + 1] = findBase(curr.level);
                         dstack[top + 2] = base;
                         dstack[top + 3] = pc;
-                        base = top + 1;
+                        base = top+1;
                         pc = curr.address;
                         break;
                     case inc:
+                        if (loud) cout<<"[increment top] "<<top<<" -> ";
                         top = top + curr.address;
+                        cout<<top<<endl;
                         break;
                     case jmp:
+                        if (loud) cout<<"[jump]"<<endl;
                         pc = curr.address;
+                        top--;
                         break;
                     case jpc:
                         if (loud) cout<<"[jump conditional]"<<endl;
@@ -256,7 +271,7 @@ class OwlMachine {
                         cout<<dstack[top]<<endl;
                         break;
                     case hlt: 
-                        cout<<"![HALT]!"<<endl;
+                        if (loud) cout<<"[HALT]"<<endl;
                         pc = 0;
                         break;
                     case lbl:
@@ -264,9 +279,9 @@ class OwlMachine {
                         pc++;
                         break;
                     default:
-                        cout<<"!![UNKNOWN INSTRUCTION]!!"<<endl;
-                        cout<<"Instruction: "<<curr.inst<<endl;
-                        cout<<"Address:     "<<curr.address<<endl;
+                        cout<<"[UNKNOWN INSTRUCTION]"<<endl;
+                        cout<<"[Instruction: "<<curr.inst<<"]"<<endl;
+                        cout<<"[Address:     "<<curr.address<<"]"<<endl;
                         break;
                 }
             } while (pc > 0 && pc < code.size());

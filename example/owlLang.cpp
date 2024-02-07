@@ -31,12 +31,16 @@ vector<string> ex3 = {
     "end"
 };
 
-vector<string> ex4 = {
+vector<string> procedureEx = {
         "program begin",
+        "   let count := 1;",
         "   func helloworld(varA,varB) begin",
-        "         print varA;",
+        "         print (varA + varB);",
         "   end;",
-        "   helloworld(1,2);",
+        "   while (count < 5) begin",
+        "       helloworld(count,count);",
+        "       let count := (count + 1);",
+        "   end;",
         "end"
 };
 
@@ -71,9 +75,9 @@ vector<string> loopEx = {
 int main(int argc, char* argv[]) {
         OwlCompiler omc;
         OwlMachine ovm;
-        omc.compile(fibEx, "fib.owlsm", true);
+        omc.compile(procedureEx, "fib.owlsm", true);
         ovm.loadProgram("fib.owlsm");
-        ovm.start(true);
+        ovm.start(false);
         cout<<"------------------------"<<endl;
     return 0;
 }
