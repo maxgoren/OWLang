@@ -14,6 +14,18 @@ vector<string> ex1 = {
         "end" 
 };
 
+vector<string> ex2 = {
+    "program begin",
+    "   func add(va,vb) begin",
+    "       let vm := (va + vb);",
+    "       print (vm);",
+    "   end;",
+    "   add(3,5);",
+    "   add(1,2);",
+    "   add(11,9);",
+    "end"
+};
+
 
 vector<string> ex3 = {
     "program begin",
@@ -31,15 +43,16 @@ vector<string> ex3 = {
     "end"
 };
 
-vector<string> procedureEx = {
+
+vector<string> loopAndFuncEx = {
         "program begin",
         "   let count := 1;",
-        "   func helloworld(varA,varB) begin",
-        "         print (varA + varB);",
+        "   func helloworld(varB) begin",
+        "         print (varB);",
         "   end;",
         "   while (count < 5) begin",
-        "       helloworld(count,count);",
-        "       let count := (count + 1);",
+        "       helloworld(count);",
+        "       count := (count + 1);",
         "   end;",
         "end"
 };
@@ -51,33 +64,22 @@ vector<string> fibEx = {
             "let curr := 1;",
             "let next := 0;",
             "while (count < 10) begin",
-            "    print curr;",
-            "    let count := (count + 1);",
-            "    let next := (curr + prev);",
-            "    let prev := curr;",
-            "    let curr := next;",
+            "    print (curr);",
+            "    count := (count + 1);",
+            "    next := (curr + prev);",
+            "    prev := (curr);",
+            "    curr := (next);",
             "end;",
         "end" 
 };
 
-vector<string> loopEx = {
-    "program begin",
-    "   let vara := 2;",
-    "   while (vara < 12) begin",
-    "       let vara := (vara + 1);",
-    "       if (vara < 7) then",
-    "           print vara;",
-    "       end;",
-    "   end;",
-    "end"
-};
 
 int main(int argc, char* argv[]) {
         OwlCompiler omc;
         OwlMachine ovm;
-        omc.compile(procedureEx, "fib.owlsm", true);
-        ovm.loadProgram("fib.owlsm");
-        ovm.start(false);
+        omc.compile(ex2, "fib.owlsm", true);
+        ovm.loadProgramFromFile("fib.owlsm");
+        ovm.start(true);
         cout<<"------------------------"<<endl;
     return 0;
 }

@@ -3,6 +3,7 @@
 #include <iostream>
 #include <vector>
 #include <fstream>
+#include "owlmachine_ins.hpp"
 using namespace std;
 
 //lit 0, a load constant a
@@ -17,308 +18,237 @@ class OwlMachine {
     private:
         const int MAXADDR = 2047;
         const int MAXNEST = 3;
-        enum OM_Inst {
-                                      lit, opr, lod, sto, cal, inc, jmp, jpc, jeq, pri, hlt, nop, lbl};
-        vector<string> ominststr = { "lit", "opr", "lod", "sto", "cal", "inc", "jmp", "jpc", "jeq", "pri", "hlt", "nop", "lbl" };
-        OM_Inst getominst(string ins) {
-            if (ins == "LBL") return lbl;
-            if (ins == "lit") return lit;
-            if (ins == "opr") return opr;
-            if (ins == "lod") return lod;
-            if (ins == "sto") return sto;
-            if (ins == "cal") return cal;
-            if (ins == "inc") return inc;
-            if (ins == "jmp") return jmp;
-            if (ins == "jpc") return jpc;
-            if (ins == "pri") return pri;
-            if (ins == "hlt") return hlt;
-            if (ins == "jeq") return jeq;
-
-            return nop;
-        }
-        struct Instruction {
-            OM_Inst inst;
-            int level;
-            int address;
-            Instruction(OM_Inst i = nop, int l = 0, int a = 0) {
-                inst = i;
-                level = l;
-                address = a;
-            }
-        };
         vector<Instruction> codePage;
         bool loud;
         typedef int REGISTER;
-        REGISTER top;
-        REGISTER base;
+        REGISTER sp;
+        REGISTER bp;
         REGISTER pc;
         REGISTER ins;
+        Instruction curr;
         static const int stackSize = 2600;
         int dstack[stackSize];
         int memStore[2600];
         int findBase(int level) {
-            int b1 = base;
+            int b1 = bp;
             while (level > 0) {
-                cout<<b1<<"? "<<endl;
                 b1 = dstack[b1];
                 level--;
             }
             return b1;
         }
         void init() {
-            top = 0;
-            base = 1;
-            pc = 0;
+            sp = 0; //<- stack pointer
+            bp = 1; //<- frame pointer
+            pc = 0;  //<- program counter
             for (int i = 0; i < stackSize; i++) 
                 dstack[i] = 0;
         }
         void doReturn() {
-            top = base - 1;
-            pc = dstack[top + 3];
-            base = dstack[top + 2];
+            sp = bp - 1;
+            pc = dstack[sp + 4];
+            bp = dstack[sp + 3];
         }
-        void negate() {
-            dstack[top] = -dstack[top];
+        void doEnter() {
+                dstack[sp + 1] = 0;
+                dstack[sp + 2] = findBase(curr.level);
+                dstack[sp + 3] = bp;
+                dstack[sp + 4] = pc;
+                bp = sp + 1;
+                pc = curr.address;
         }
-        void add() {
-            top--;
-            if (loud) cout<<"["<<dstack[top]<<" + "<<dstack[top+1];
-            dstack[top] = dstack[top] + dstack[top+1];
-            if (loud) cout<<", R: "<<dstack[top]<<"]"<<endl;
-        }
-        void sub() {
-            top--;
-            if (loud) cout<<dstack[top]<<" - "<<dstack[top+1];
-            dstack[top] = dstack[top] - dstack[top+1];
-            if (loud) cout<<", R: "<<dstack[top]<<endl;
-        }
-        void mul() {
-            top--;
-            if (loud) cout<<dstack[top]<<" * "<<dstack[top+1];
-            dstack[top] = dstack[top] * dstack[top+1];
-            if (loud) cout<<", R: "<<dstack[top]<<endl;
-        }
-        void div() {
-            top--;
-            if (loud) cout<<dstack[top]<<" / "<<dstack[top+1];
-            dstack[top] = dstack[top+1] / dstack[top];
-            if (loud) cout<<", R: "<<dstack[top]<<endl;
-        }
-        void isOdd() {
-            dstack[top] = (dstack[top] % 2 == 0);
-        }
-        void isEqual() {
-            top--;
-            if (loud) cout<<dstack[top]<<" == "<<dstack[top+1];
-            dstack[top] = (dstack[top] == dstack[top+1]);
-            if (loud) cout<<", R: "<<dstack[top]<<endl;
-        }
-        void notEqual() {
-            top--;
-            if (loud) cout<<dstack[top]<<" != "<<dstack[top+1];
-            dstack[top] = (dstack[top] != dstack[top+1]);
-            if (loud) cout<<", R: "<<dstack[top]<<endl;
-        }
-        void isLess() {
-            top--;
-            if (loud) 
-                cout<<"["<<dstack[top]<<" < "<<dstack[top+1];
-            dstack[top] = (dstack[top] < dstack[top+1]);
-            if (loud) 
-                cout<<", R: "<<dstack[top]<<"]"<<endl;
-        }
-        void isGreater() {
-            top--;
-            if (loud) cout<<dstack[top]<<" > "<<dstack[top+1];
-            dstack[top] = (dstack[top] > dstack[top+1]);
-            if (loud) cout<<", R: "<<dstack[top]<<endl;
-        }
-        void isLessOrEqual() {
-            top--;
-            if (loud) cout<<dstack[top]<<" <= "<<dstack[top+1];
-            dstack[top] = (dstack[top] <= dstack[top+1]);
-            if (loud) cout<<", R: "<<dstack[top]<<endl;
-        }
-        void isGreaterOrEqual() {
-            top--;
-            if (loud) cout<<dstack[top]<<" >= "<<dstack[top+1];
-            dstack[top] = (dstack[top] > dstack[top+1]);
-            if (loud) cout<<", R: "<<dstack[top]<<endl;
-        }
-        void doOperation(Instruction curr) {
-            switch (curr.address) {
-                case 0: //return
-                    doReturn();
-                    break;
-                case 1:
-                    negate();
-                    break;
-                case 2:
-                    add();
-                    break;
-                case 3:
-                    sub();
-                    break;
-                case 4:
-                    mul();
-                    break;
-                case 5:
-                    div();
-                    break;
-                case 6:
-                    isOdd();
-                    break;
-                case 8:
-                    isEqual();
-                    break;
-                case 9:
-                    notEqual();
-                    break;
-                case 10:
-                    isLess();
-                    break;
-                case 11:
-                    isGreaterOrEqual();
-                    break;
-                case 12:
-                    isGreater();
-                    break;
-                case 13:
-                    isLessOrEqual();
-                    break;
-                default:
-                    cout<<"!![UNKNOWN OPERATION]!!"<<endl;
-                    cout<<"Instruction: "<<curr.inst<<endl;
-                    cout<<"Address:     "<<curr.address<<endl;
-                    break;
-            }
-        }
+        void doOperation();
         void printStack() {
-            cout<<"STACK: [ ";
-            for (int i = 0; i < top; i++) {
-                cout<<dstack[i]<<", ";
+            cout<<"[pc: "<<pc<<"]"<<(curr.inst < ominststr.size() ? ominststr[curr.inst]:"LBL")<<" "<<curr.level<<" "<<curr.address<<" ";
+            cout<<"Stack: [ ";
+            int i = 0;
+            for (;i <= stackSize; i++) {
+                if (i > sp && dstack[i+1] == 0 && dstack[i+2] == 0 && dstack[i+3] == 0 && dstack[i+4] == 0) {
+                    break;
+                }
+                if (i == bp)
+                    cout<<"| ";
+                cout<<dstack[i]<<" ";
             }
-            cout<<"] base: "<<base<<", pc: "<<pc<<", top: "<<top<<endl;
+            cout<<"]"<<endl;
         }
+        void fetchInstruction() {
+            curr = codePage[pc];
+            pc += 1;
+        }
+        void executeInstruction();
     public:
         OwlMachine() {
             init();
         }
-        void start(bool trace) {
-            loud = trace;
-            Instruction curr;
-            int i = 0;
-            cout<<"[OWLVM v0.1 Starting...]"<<endl;
-            do {
-                curr = codePage[pc++];
-                if (loud) {
-                    cout<<"[pc: "<<pc<<"]"<<(curr.inst < ominststr.size() ? ominststr[curr.inst]:"LBL")<<" , addr: "<<curr.address<<", ";
-                    printStack();
-                }
-                switch (curr.inst) {
-                    case lit: 
-                        if (loud) cout<<"[push "<<curr.address<<"]"<<endl;
-                        dstack[++top] = curr.address;
-                        break;
-                    case opr:
-                        if (loud) cout<<"[op ]"<<endl;
-                        doOperation(curr);
-                        break;
-                    case lod:
-                        top++;
-                        if (loud) cout<<"[load from memory addr: "<<curr.address<<"("<<findBase(curr.level) + curr.address<<")]: ";
-                        dstack[top] = dstack[curr.address];
-                        if (loud) cout<<dstack[top]<<endl;
-                        break;
-                    case sto:
-                        if (loud) cout<<"[store to memory]"<<endl;
-                        dstack[curr.address] = dstack[top];
-                        break;
-                    case cal:
-                        if (loud) cout<<"[cal]"<<endl;
-                        dstack[top + 1] = findBase(curr.level);
-                        dstack[top + 2] = base;
-                        dstack[top + 3] = pc;
-                        base = top+1;
-                        pc = curr.address;
-                        break;
-                    case inc:
-                        if (loud) cout<<"[increment top] "<<top<<" -> ";
-                        top = top + curr.address;
-                        cout<<top<<endl;
-                        break;
-                    case jmp:
-                        if (loud) cout<<"[jump]"<<endl;
-                        pc = curr.address;
-                        top--;
-                        break;
-                    case jpc:
-                        if (loud) cout<<"[jump conditional]"<<endl;
-                        if (dstack[top] == 0) {
-                            pc = curr.address;
-                            top--;
-                        }
-                        break;
-                    case jeq:
-                        if (loud) cout<<"[jump conditional]"<<endl;
-                        if (dstack[top] == 1) {
-                            pc = curr.address;
-                            top--;
-                        }
-                        break;
-                    case pri:
-                        if (loud) cout<<"[I/O OUT]"<<endl;
-                        cout<<dstack[top]<<endl;
-                        break;
-                    case hlt: 
-                        if (loud) cout<<"[HALT]"<<endl;
-                        pc = 0;
-                        break;
-                    case lbl:
-                    case nop:
-                        pc++;
-                        break;
-                    default:
-                        cout<<"[UNKNOWN INSTRUCTION]"<<endl;
-                        cout<<"[Instruction: "<<curr.inst<<"]"<<endl;
-                        cout<<"[Address:     "<<curr.address<<"]"<<endl;
-                        break;
-                }
-            } while (pc > 0 && pc < code.size());
-            cout<<"[OWLVM Done.]"<<endl;
+        void start(bool trace);
+        void loadProgram(vector<Instruction> program) {
+            codePage = program;
         }
-        void loadProgram(string filename) {
-            vector<string> asmCode;
-            ifstream infile;
-            infile.open(filename);
-            if (infile.is_open()) {
-                string line;
-                while (getline(infile, line))
-                    asmCode.push_back(line);
-                infile.close();
-            }
-            for (string line : asmCode) {
-                if (line.substr(0,2) == "<-") continue;
-                string instr = line.substr(0, 3);
-                string levstr = "";
-                string adrstr = "";
-                int i = 3;
-                bool hitcoma = false;
-                while (i < line.size()) {
-                    if (isdigit(line[i])) {
-                        string num;
-                        while (isdigit(line[i]))
-                                num.push_back(line[i++]);
-                        if (line[i] == ',') hitcoma = true;
-                        if (hitcoma) adrstr = num;
-                        else levstr = num;
-                    }
-                    i++;
-                }
-                Instruction next(getominst(instr), atoi(levstr.c_str()), atoi(adrstr.c_str()));
-                codePage.push_back(next);
-            }
-        }
+        void loadProgramFromFile(string filename);
 };
+
+void OwlMachine::start(bool trace) {
+    loud = trace;
+    int i = 0;
+    cout<<code.size()<<endl;
+    cout<<"[OWLVM v0.1 Starting...]"<<endl;
+    do {
+        fetchInstruction();
+        executeInstruction();
+        if (loud)
+            printStack();
+        
+    } while (pc > 0 && pc < code.size());
+    cout<<"[OWLVM Done.]"<<endl;
+}
+
+void OwlMachine::loadProgramFromFile(string filename) {
+    vector<string> asmCode;
+    ifstream infile;
+    infile.open(filename);
+    if (infile.is_open()) {
+        string line;
+        while (getline(infile, line))
+            asmCode.push_back(line);
+        infile.close();
+    }
+    for (string line : asmCode) {
+        if (line.substr(0,2) == "<-") continue;
+        string instr = line.substr(0, 3);
+        string levstr = "";
+        string adrstr = "";
+        int i = 3;
+        bool hitcoma = false;
+        while (i < line.size()) {
+            if (isdigit(line[i])) {
+                string num;
+                while (isdigit(line[i]))
+                        num.push_back(line[i++]);
+                if (line[i] == ',') hitcoma = true;
+                if (hitcoma) adrstr = num;
+                else levstr = num;
+            }
+            i++;
+        }
+        Instruction next(getominst(instr), atoi(levstr.c_str()), atoi(adrstr.c_str()));
+        codePage.push_back(next);
+    }
+}
+
+
+void OwlMachine::executeInstruction() {
+    switch (curr.inst) {
+            case lit: 
+                sp += 1;
+                dstack[sp] = curr.address;
+                break;
+            case opr:
+                doOperation();
+                break;
+            case lod:
+                sp += 1;
+                dstack[sp] = dstack[findBase(curr.level) + curr.address];
+                break;
+            case sto:
+                dstack[findBase(curr.level) + curr.address] = dstack[sp];
+                break;
+            case cal:
+                doEnter();
+                break;
+            case inc:
+                sp = sp + curr.address;
+                break;
+            case jmp:
+                pc = curr.address;
+                break;
+            case jpc:
+                if (dstack[sp] == 0) {
+                    pc = curr.address;
+                }
+                sp--;
+                break;
+            case jeq:
+                if (dstack[sp] == 1) {
+                    pc = curr.address;
+                }
+                sp--;
+                break;
+            case pri:
+                if (loud) cout<<"[I/O OUT]"<<endl;
+                cout<<dstack[sp]<<endl;
+                sp--;
+                break;
+            case hlt: 
+                cout<<"![HALT]!"<<endl;
+                pc = 0;
+                break;
+            case lbl:
+            case nop:
+                pc++;
+                break;
+            default:
+                cout<<"[UNKNOWN INSTRUCTION] [Instruction: "<<curr.inst<<" Address:     "<<curr.address<<"]"<<endl;
+                break;
+        }
+}
+
+ void OwlMachine::doOperation() {
+    switch (curr.address) {
+        case 0:
+            doReturn();
+            break;
+        case 1:
+            dstack[sp] = -dstack[sp];
+            break;
+        case 2:
+            sp--;
+            dstack[sp] = dstack[sp] + dstack[sp+1];
+            break;
+        case 3:
+            sp--;
+            dstack[sp] = dstack[sp] - dstack[sp+1];
+            break;
+        case 4:
+            sp--;
+            dstack[sp] = dstack[sp] * dstack[sp+1];
+            break;
+        case 5:
+            sp--;
+            dstack[sp] = dstack[sp] / dstack[sp+1];
+            break;
+        case 6:
+            sp--;
+            dstack[sp] = (dstack[sp+1] % 2 == 0);
+            break;
+        case 8:
+            sp--;
+            dstack[sp] = (dstack[sp] == dstack[sp+1]);
+            break;
+        case 9:
+            sp--;
+            dstack[sp] = (dstack[sp+1] != dstack[sp]);
+            break;
+        case 10:
+            sp--;
+            dstack[sp] = (dstack[sp] < dstack[sp+1]);
+            break;
+        case 11:
+            sp--;
+            dstack[sp] = (dstack[sp] >= dstack[sp+1]);
+            break;
+        case 12:
+            sp--;
+            dstack[sp] = (dstack[sp] > dstack[sp+1]);
+            break;
+        case 13:
+            sp--;
+            dstack[sp] = (dstack[sp] <= dstack[sp+1]);
+            break;
+        default:
+            cout<<"[UNKNOWN OPERATION]"<<"  Instruction: "<<curr.inst<<"  Address: "<<curr.address<<"  PC: "<<pc<<endl;
+            break;
+    }
+}
 
 #endif

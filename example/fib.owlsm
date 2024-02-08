@@ -1,22 +1,22 @@
-lit 0, 1
-sto 0, 0
-jmp 0, 8
-lod 0, 1
-lod 0, 2
+jmp 0, 9
+inc 0, 2
+lod 1, 0
+lod 1, 1
 opr 0, 2
+sto 0, 2
+lod 1, 2
 pri
 opr 0, 0
-LBL0:
-lod 0, 0
-lod 0, 0
-lod 0, 0
-cal 0, 3
-lod 0, 0
-lit 0, 1
-opr 0, 2
-sto 0, 0
-lod 0, 0
+lit 0, 3
 lit 0, 5
-opr 0, 10
-jeq 0, 8
+lit 0, 5
+cal 0, 1
+lit 0, 1
+lit 0, 2
+lit 0, 2
+cal 0, 1
+lit 0, 11
+lit 0, 9
+lit 0, 9
+cal 0, 1
 hlt

@@ -23,7 +23,7 @@ class TokenStreamIter {
         }
         Token peekRightOne() {
             if (current && current->next)
-                return current->token;
+                return current->next->token;
             return get();
         }
         void advance() {

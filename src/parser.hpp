@@ -81,6 +81,7 @@ class OwlParser {
         link printStatement();
         link whileStatement();
         link ifStatement();
+        link idStatement();
         link funcDecl();
         link paramList();
         link funcCall();
@@ -183,15 +184,29 @@ SyntaxNode* OwlParser::statement() {
         case FUNC:
             match(FUNC);
             t = funcDecl();
+            break;
         case ID:
-            if (procedureNames.find(lookahead().stringval) != -1) {
-                t = funcCall();
-            } else
+            t = idStatement();
+            break;
         default:
             printError(UNKNOWNSYMBOL);
             break;
     }
     onExit("statement");
+    return t;
+}
+
+SyntaxNode* OwlParser::idStatement() {
+    onEnter("idStatement");
+    SyntaxNode* t;
+    cout<<tokenString[lookahead().tokenval]<<", next: "<<tokenString[streamIter.peekRightOne().tokenval]<<endl;
+    if (procedureNames.find(lookahead().stringval) != -1) {
+        t = funcCall();
+    }
+    if (streamIter.peekRightOne().tokenval == ASSIGN) {
+        t = assignStatement();
+    }
+    onExit("idStatement");
     return t;
 }
 

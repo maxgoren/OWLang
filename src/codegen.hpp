@@ -34,10 +34,11 @@ bool loud = false;
 vector<string> code(1000);
 int codeIndex;
 int highCI;
-
+int level;
 void init() {
     codeIndex = 0;
     highCI = 0;
+    level = 0;
 }
 
 vector<string> getCode() {
@@ -66,7 +67,6 @@ int getLabelAddr(string l) {
 }
 
 void emit(string s) {
-    if (loud) cout<<"codeIndex: "<<codeIndex<<", "<<s<<endl;
     if (s[0] == '<' && s[1] == '-') return;
     code[codeIndex++] = s;
     if (highCI < codeIndex) highCI = codeIndex;
@@ -76,7 +76,6 @@ int emitSkip(int places) {
     int i = codeIndex;
     codeIndex += places;
     if (highCI < codeIndex) highCI = codeIndex;
-    cout<<"Emit Skip at: "<<i<<", new CI: "<<codeIndex<<endl;
     return i;
 }
 
@@ -130,6 +129,11 @@ void addInstructionToEmit(TokenType tt, string& opstr) {
             opstr += "10";
             if (loud) 
                 emit("<- less than"); 
+            break;
+        case GT:
+            opstr += "11";
+            if (loud)
+                emit("<- greater than");
             break;
         default:
          opstr.push_back('z');
@@ -219,10 +223,12 @@ void generateStatement(SyntaxNode* x) {
         case FUNCDECL:
             s1 = emitSkip(1);
             cl = emitSkip(0);
-            //emit("inc 0, " + to_string(countSiblings(x->child[1])));
+            level++;
+            emit("inc 0, " + to_string(countSiblings(x->child[1])));
             st.insert(x->attribute.name, cl);
             generate(x->child[1]);
             emit("opr 0, 0");
+            level--;
             cl = emitSkip(0);
             backUpEmit(s1);
             emit("jmp 0, " + to_string(cl));
@@ -251,7 +257,7 @@ void generateExpression(SyntaxNode* x) {
                 emit("<- push " + to_string(x->attribute.val));
             break;
         case ID_EXPR: 
-            codeIns = "lod 0, " + to_string(st.find(x->attribute.name));
+            codeIns = "lod " + to_string(level) + ", " + to_string(st.find(x->attribute.name));
             if (loud)
                 emit("<- push contents of mem address " + to_string(st.find(x->attribute.name)) + " to top of stack");
             break;
