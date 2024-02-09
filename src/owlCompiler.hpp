@@ -9,13 +9,11 @@
 #include "owlmachine.hpp"
 #include "parser.hpp"
 #include "syntaxTree.hpp"
-#include "symbolTable.hpp"
 using namespace std;
 
 
 class OwlCompiler {
     private:
-        SymbolTable sto;
         OwlLexer lexer;
         OwlParser parser;
         TokenStream ts;
@@ -43,14 +41,17 @@ class OwlCompiler {
                 cout<<"Phase 1: Lex & Parse."<<endl;
             }
             ts = lexer.tokenize(codeVec);
+            if (loud) printTokenStream(ts);
             ast = parser.parse(ts, loud);
+            if (loud) printTree(ast);
+
             if (loud) {
-                printTree(ast);
                 cout<<"\n\n------------------------------\n";
                 cout<<"Phase 2: Code Generation."<<endl;
             }
-            generateCode(ast, loud);
-            auto owl = getCode();
+
+            vector<string> owl = generatePCodeFromAST(ast, loud);
+
             ofstream outfile;
             outfile.open(filename);
             if (outfile.is_open()) {

@@ -21,6 +21,11 @@ class TokenStreamIter {
         Token& get() {
             return current->token;
         }
+        Token peekRightOne() {
+            if (current && current->next)
+                return current->next->token;
+            return get();
+        }
         void advance() {
             current = current->next;
         }
@@ -82,6 +87,7 @@ class OwlLexer {
         TokenType handleKeywordOrId(string word);
         TokenStreamNode* handleSpecials(string word, int& i, int lno);
         int extractFullNumber(string line, int& i);
+        string extractFullWord(string line, int& i);
         TokenStream tokenizeLine(string line, int lno);
     public:
         OwlLexer() {
@@ -109,8 +115,8 @@ TokenType OwlLexer::handleKeywordOrId(string word) {
         return PRINT;
     } else if (word == "if") {
         return IF;
-    } else if (word == "do") {
-        return DO;
+    } else if (word == "then") {
+        return THEN;
     } else if (word == "else") {
         return ELSE;
     } else if (word == "endif") {
@@ -121,6 +127,8 @@ TokenType OwlLexer::handleKeywordOrId(string word) {
         return WHILE;
     } else if (word == "let") {
         return LET;
+    } else if (word == "program") {
+        return PROG;
     } else {
         return ID;
     }
@@ -208,6 +216,11 @@ TokenStreamNode* OwlLexer::handleSpecials(string line, int& i, int lno) {
         nextToken.stringval = ";";
         nextToken.numval = -1;    
         return new TokenStreamNode(nextToken);
+    } else if (line[i] == ',') {
+        nextToken.tokenval = COMA;
+        nextToken.stringval = ",";
+        nextToken.numval = -1;    
+        return new TokenStreamNode(nextToken);
     } else {
         cout<<"ERROR\n";
         nextToken.tokenval = ERROR;
@@ -225,15 +238,21 @@ int OwlLexer::extractFullNumber(string line, int& i) {
     return atoi(asStr.c_str());
 }
 
+string OwlLexer::extractFullWord(string line, int& i) {
+    string word;
+    while (isalpha(line[i])) 
+        word.push_back(line[i++]);
+    i--;
+    return word;
+}
+
 TokenStream OwlLexer::tokenizeLine(string line, int lno) {
     TokenStream tokenStream;
     for (int i = 0; i < line.size(); i++) {
         Token nextToken;
         nextToken.lineno = lno;
         if (isalpha(line[i])) {
-            string word;
-            while (isalpha(line[i])) 
-                word.push_back(line[i++]);
+            string word = extractFullWord(line, i);
             nextToken.tokenval = handleKeywordOrId(word);
             nextToken.stringval = word;
             tokenStream.addNode(new TokenStreamNode(nextToken));

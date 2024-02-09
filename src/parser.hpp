@@ -34,18 +34,23 @@ class OwlParser {
     private:
         using node = SyntaxNode;
         using link = node*;
+        int matchFail;
         TokenStream tokenStream;
         TokenStreamIter streamIter;
+        SymbolTable procedureNames;
         Token lookahead() {
             return streamIter.get();
         }
         void printError(errorType et) {
+            for (int i = 0; i < ind; i++) cout<<"  ";
             switch (et) {
                 case MISMATCH:
                 case UNKNOWNSYMBOL:
-                    cout<<"Unexpected symbol encountered on line "<<lookahead().lineno<<": "<<lookahead().stringval<<endl;
+                    cout<<" - Unexpected symbol encountered on line "<<lookahead().lineno<<": "<<lookahead().stringval<<endl;
+                    return;
+                    break;
                 default:
-                    cout<<"An unkown error was encountered on line: "<<lookahead().lineno<<endl;
+                    cout<<" - An unkown error was encountered on line: "<<lookahead().lineno<<endl;
 
             }
         }
@@ -54,6 +59,11 @@ class OwlParser {
                 say("Match: " + lookahead().stringval);                
                 streamIter.advance();
                 return true;
+            }
+            matchFail++;
+            if (matchFail > 5) {
+                cout<<"Too many mismatches, bailing out."<<endl;
+                exit(0);
             }
             return false;
         }
@@ -71,7 +81,11 @@ class OwlParser {
         link printStatement();
         link whileStatement();
         link ifStatement();
-        link condition();
+        link idStatement();
+        link funcDecl();
+        link paramList();
+        link funcCall();
+        link argList();
         link expression();
         link alg_expression();
         link term();
@@ -84,6 +98,7 @@ class OwlParser {
 };
 
 OwlParser::OwlParser(TokenStream ts, bool trace) {
+    matchFail = 0;
     traceParse = trace;
     tokenStream = ts;
     streamIter = tokenStream.getStream();
@@ -91,6 +106,7 @@ OwlParser::OwlParser(TokenStream ts, bool trace) {
 
 OwlParser::OwlParser() {
     traceParse = false;
+    matchFail = 0;
 }
 
 SyntaxNode* OwlParser::parse() {
@@ -107,6 +123,7 @@ SyntaxNode* OwlParser::parse(TokenStream ts, bool trace) {
 SyntaxNode* OwlParser::program() {
     link t = nullptr;
     onEnter("program");
+    match(PROG);
     t = block();
     onExit("program");
     return t;
@@ -118,6 +135,7 @@ SyntaxNode* OwlParser::block() {
     if (match(BEGIN)) {
         t = statementSequence();
     }
+    match(END);
     onExit("block");
     return t;
 }
@@ -127,14 +145,16 @@ SyntaxNode* OwlParser::statementSequence() {
     link p = t;
     while ((lookahead().tokenval != END) && (lookahead().tokenval != ELSE)) {
         link q = nullptr;
-        match(SEMI);
-        q = statement();
-        if (q != nullptr) {
-            if (t == nullptr) {
-                t = p = q;
-            } else {
-                p->next = q;
-                p = q;
+        if (match(SEMI)) {
+            if (lookahead().tokenval == END) break;
+            q = statement();
+            if (q != nullptr) {
+                if (t == nullptr) {
+                    t = p = q;
+                } else {
+                    p->next = q;
+                    p = q;
+                }
             }
         }
     }
@@ -161,11 +181,32 @@ SyntaxNode* OwlParser::statement() {
             match(PRINT);
             t = printStatement();
             break;
+        case FUNC:
+            match(FUNC);
+            t = funcDecl();
+            break;
+        case ID:
+            t = idStatement();
+            break;
         default:
             printError(UNKNOWNSYMBOL);
             break;
     }
     onExit("statement");
+    return t;
+}
+
+SyntaxNode* OwlParser::idStatement() {
+    onEnter("idStatement");
+    SyntaxNode* t;
+    cout<<tokenString[lookahead().tokenval]<<", next: "<<tokenString[streamIter.peekRightOne().tokenval]<<endl;
+    if (procedureNames.find(lookahead().stringval) != -1) {
+        t = funcCall();
+    }
+    if (streamIter.peekRightOne().tokenval == ASSIGN) {
+        t = assignStatement();
+    }
+    onExit("idStatement");
     return t;
 }
 
@@ -207,7 +248,7 @@ SyntaxNode* OwlParser::ifStatement() {
     link t = makeStatementNode(IFSTM);
     onEnter("ifStatement");
     t->child[0] = expression();
-    match(BEGIN);
+    match(THEN);
     t->child[1] = statementSequence();
     if (lookahead().tokenval == ELSE) {
         match(ELSE);
@@ -218,8 +259,58 @@ SyntaxNode* OwlParser::ifStatement() {
     return t;
 }
 
-SyntaxNode* OwlParser::condition() {
-    link t;
+SyntaxNode* OwlParser::funcDecl() {
+    onEnter("funcDecl");
+    link t = makeStatementNode(FUNCDECL);
+    t->attribute.name = lookahead().stringval;
+    match(ID);
+    cout<<"Added "<<t->attribute.name<<" to list of procedure names."<<endl;
+    procedureNames.insert(t->attribute.name, 0);
+    match(LPAREN);
+    t->child[0] = paramList();
+    match(RPAREN);
+    t->child[1] = block();
+    onExit("funcDecl");
+    return t;
+}
+
+SyntaxNode* OwlParser::paramList() {
+    onEnter("paramList");
+    link t = factor();
+    link m = t;
+    while (lookahead().tokenval == COMA) {
+        match(COMA);
+        link p = factor();
+        m->next = p;
+        m = p;
+    }
+    onExit("paramList");
+    return t;
+}
+
+SyntaxNode* OwlParser::funcCall() {
+    onEnter("funcCall");
+    link t = makeStatementNode(PROCDCALL);
+    t->attribute.name = lookahead().stringval;
+    match(ID);
+    match(LPAREN);
+    t->child[1] = argList();
+    match(RPAREN);
+    onExit("funcCall");
+    return t;
+}
+
+SyntaxNode* OwlParser::argList() {
+    onEnter("paramList");
+    link t = expression();
+    link m = t;
+    while (lookahead().tokenval == COMA) {
+        match(COMA);
+        link p = expression();
+        m->next = p;
+        m = p;
+    }
+    onExit("paramList");
     return t;
 }
 

@@ -89,6 +89,15 @@ class SymbolTable {
                 delete h;
             }
         }
+        void visit(link x) {
+            if (x != nullptr) {
+                visit(x->left);
+                for (Entry* et = x->entry; et != nullptr; et = et->next) {
+                    cout<<"name: "<<et->varname<<", address: "<<et->address<<endl;
+                }
+                visit(x->right);
+            }
+        }
     public:
         SymbolTable() {
             root = nullptr;
@@ -105,6 +114,9 @@ class SymbolTable {
         }
         int size() {
             return count;
+        }
+        void dumpTable() {
+            visit(root);
         }
         bool empty() {
             return root == nullptr;
