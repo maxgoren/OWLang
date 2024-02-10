@@ -58,7 +58,10 @@ class SymbolTable {
                 return new node(k, l);
             }
             if (k == h->entry->varname) {
-                h->entry = new Entry(k, l, h->entry);
+                if (h->entry->address < 0)
+                    h->entry->address = l;
+                else
+                    h->entry = new Entry(k, l, h->entry);
                 return h;
             }
             if (k < h->entry->varname) {
@@ -113,8 +116,11 @@ class SymbolTable {
             link x = root;
             while (x != nullptr) {
                 if (x->entry->varname == varname) {
-                    if (x->entry->next == nullptr)
+                    //tombstone deletion on single entries.
+                    if (x->entry->next == nullptr) {
+                        x->emtry->address = -1337;
                         return;
+                    }
                     Entry* t = x->entry;
                     x->entry = x->entry->next;
                     delete t;
