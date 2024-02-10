@@ -3,8 +3,8 @@
 #include <iostream>
 #include "tokens.hpp"
 #include "lexer.hpp"
-#include "syntaxTree.hpp"
-#include "symbolTable.hpp"
+#include "../ast/syntaxTree.hpp"
+#include "../symboltable/symbolTable.hpp"
 using namespace std;
 
 enum errorType {
