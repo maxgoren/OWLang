@@ -1,6 +1,5 @@
 #ifndef owlvm_ds_hpp
 #define owlvm_ds_hpp
-
 #include <iostream>
 #include <vector>
 using namespace std;

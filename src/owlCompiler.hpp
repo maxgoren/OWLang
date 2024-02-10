@@ -3,7 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include "tokens.hpp"
+#include "globals/tokens.hpp"
 #include "backend/codegen.hpp"
 #include "frontend/lexer.hpp"
 #include "frontend/parser.hpp"

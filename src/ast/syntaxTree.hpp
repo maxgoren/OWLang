@@ -1,6 +1,6 @@
 #ifndef SYNTAXTREE_HPP
 #define SYNTAXTREE_HPP
-#include "Tokens.hpp"
+#include "../globals/tokens.hpp"
 enum NodeType {
     STMTNODE, EXPRNODE
 };

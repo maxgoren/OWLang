@@ -1,7 +1,7 @@
 #ifndef PARSER_HPP
 #define PARSER_HPP
 #include <iostream>
-#include "tokens.hpp"
+#include "../globals/tokens.hpp"
 #include "lexer.hpp"
 #include "../ast/syntaxTree.hpp"
 #include "../symboltable/symbolTable.hpp"
