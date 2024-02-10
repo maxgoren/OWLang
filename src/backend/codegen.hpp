@@ -6,7 +6,7 @@
 #include "Tokens.hpp"
 #include "../ast/syntaxTree.hpp"
 #include "../symboltable/symbolTable.hpp"
-#include "../backend/vm/owlvm_ds.hpp"
+#include "vm/owlvm_ds.hpp"
 using namespace std;
 
 //API for code generation
