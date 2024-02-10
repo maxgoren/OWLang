@@ -1,6 +1,7 @@
 #ifndef lexer_hpp
 #define lexer_hpp
 #include <iostream>
+#include <vector>
 #include "tokens.hpp"
 using namespace std;
 
@@ -161,13 +162,13 @@ TokenStreamNode* OwlLexer::handleSpecials(string line, int& i, int lno) {
         return new TokenStreamNode(nextToken);
     } else if (line[i] == '<' && i+1 < line.size() && line[i+1] == '=') {
         i+=2;
-        nextToken.tokenval = LTE;
+        nextToken.tokenval = LESSEQ;
         nextToken.stringval = "<=";
         nextToken.numval = -1;    
         return new TokenStreamNode(nextToken);
     } else if (line[i] == '>' && i+1 < line.size() && line[i+1] == '=') {
         i+=2;
-        nextToken.tokenval = GTE;
+        nextToken.tokenval = GREATEREQ;
         nextToken.stringval = ">=";
         nextToken.numval = -1;    
         return new TokenStreamNode(nextToken);
@@ -197,7 +198,7 @@ TokenStreamNode* OwlLexer::handleSpecials(string line, int& i, int lno) {
         nextToken.numval = -1;    
         return new TokenStreamNode(nextToken);
     } else if (line[i] == '<') {
-        nextToken.tokenval = LT;
+        nextToken.tokenval = LESS;
         nextToken.stringval = "<";
         nextToken.numval = -1;    
         return new TokenStreamNode(nextToken);

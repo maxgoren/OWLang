@@ -51,19 +51,18 @@ void nullop(SyntaxNode* x) {
     return;
 }
 
-
+int mzt = 0;
 void printNode(SyntaxNode* x) { 
     if (x != nullptr) {
-        if (x->nodeKind == EXPRNODE) cout<<"["<<ExprTypeStr[x->node.expr]<<"] ";
-        else if (x->nodeKind == STMTNODE) cout<<"["<<StmtTypeStr[x->node.stmt]<<"] ";
+        if (x->nodeKind == EXPRNODE) cout<<"["<<ExprTypeStr[x->node.expr]<<"]";
+        else if (x->nodeKind == STMTNODE) cout<<"["<<StmtTypeStr[x->node.stmt]<<"]";
         else cout<<"[what?]"<<endl;
-        cout<<((x->attribute.name.size() > 0) ? x->attribute.name:"(unknown)")<<", "<<flush;
-        cout<<((x->attribute.val >= 0) ? to_string(x->attribute.val):"[0xff]")<<", "<<flush;
-        cout<<((x->attribute.op > 0) ? tokenString[x->attribute.op]:"[0xff]")<<endl;
+        cout<<" - { name: "<<((x->attribute.name.size() > 0) ? x->attribute.name:"[0xff]")<<", val: "<<flush;
+        cout<<((x->attribute.val >= 0) ? to_string(x->attribute.val):"[0xff]")<<", op: "<<flush;
+        cout<<((x->attribute.op > 0) ? tokenString[x->attribute.op]:"[0xff]")<<"}"<<endl;
     }
 }
 
-int mzt = 0;
 void printTree(SyntaxNode* x) {
     mzt++;
     while (x != nullptr) {

@@ -4,6 +4,7 @@
 #include "tokens.hpp"
 #include "lexer.hpp"
 #include "syntaxTree.hpp"
+#include "symbolTable.hpp"
 using namespace std;
 
 enum errorType {
@@ -317,7 +318,7 @@ SyntaxNode* OwlParser::argList() {
 SyntaxNode* OwlParser::expression() {
     link t = alg_expression();
     onEnter("expression");
-    if (lookahead().tokenval == LT || lookahead().tokenval == EQUAL) {
+    if (lookahead().tokenval == LESS || lookahead().tokenval == EQUAL) {
         link p = makeExpressionNode(OP_EXPR);
         p->child[0] = t;
         p->attribute.op = lookahead().tokenval;

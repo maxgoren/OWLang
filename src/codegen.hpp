@@ -2,14 +2,16 @@
 #define codegen_hpp
 #include <iostream>
 #include <vector>
+#include <iomanip>
 #include "Tokens.hpp"
 #include "syntaxtree.hpp"
 #include "symbolTable.hpp"
+#include "owlvm_ds.hpp"
 using namespace std;
 
 //API for code generation
-vector<string>  generatePCodeFromAST(SyntaxNode* x, bool trace);
-vector<string>  getCode();
+vector<Instruction>  generatePCodeFromAST(SyntaxNode* x, bool trace);
+vector<Instruction>  getCode();
 
 
 //internal methods for codegen
@@ -31,7 +33,7 @@ int            getLabelAddr(string lbl);
 SymbolTable st;
 int memAddr = 0;
 bool loud = false;
-vector<string> code(1000);
+vector<Instruction> code(1000);
 int codeIndex;
 int highCI;
 int level;
@@ -41,14 +43,16 @@ void init() {
     level = 0;
 }
 
-vector<string> getCode() {
+vector<Instruction> getCode() {
     return code;
 }
 
 int labelNum = 0;
 string emit_Label() {
     string label = "LBL" + to_string(labelNum) + ":";
-    code[codeIndex++] = label;
+    code[codeIndex] = Instruction(LBL, 0, 0);
+    code[codeIndex].label = label;
+    codeIndex++;
     return label;
 }
 
@@ -57,7 +61,7 @@ int getLabelAddr(string l) {
     cout<<"Finding "<<l;
     for (; i < codeIndex; i++) {
         cout<<".";
-        if (code[i] == l) {
+        if (code[i].label == l) {
             cout<<" Found at address: "<<i<<endl;
             return i;
         }
@@ -66,9 +70,8 @@ int getLabelAddr(string l) {
     return -1;
 }
 
-void emit(string s) {
-    if (s[0] == '<' && s[1] == '-') return;
-    code[codeIndex++] = s;
+void emit(vmop op, int address, int value) {
+    code[codeIndex++] = Instruction(op, address, value);
     if (highCI < codeIndex) highCI = codeIndex;
 }
 
@@ -88,63 +91,51 @@ void restoreEmit() {
     codeIndex = highCI;
 }
 
-void addInstructionToEmit(TokenType tt, string& opstr) {
-    switch (tt) {
-        case PLUS: 
-            opstr.push_back('2');
-            if (loud)  
-                emit("<- add"); 
+void emitInstruction(TokenType op) {
+    switch (op) {
+        case PLUS:
+            emit(ADI, 0, 0);
             break;
-        case MINUS: 
-            opstr.push_back('3');
-            if (loud)  
-                emit("<- subtract"); 
+        case MINUS:
+            emit(SBI, 0, 0);
             break;
-        case MULT: 
-            opstr.push_back('4'); 
-            if (loud) 
-                emit("<- multiply");
+        case MULT:
+            emit(MPI, 0, 0);
             break;
-        case DIVD: 
-            opstr.push_back('5'); 
-            if (loud) 
-                emit("<- divide"); 
+        case DIVD:
+            emit(DVI, 0, 0);
             break;
-        case NOT: 
-            opstr.push_back('6'); 
-            if (loud) 
-                emit("<- negate"); 
+        case NOT:
+            emit(NEG, 0, 0);
             break;
-        case EQUAL: 
-            opstr.push_back('8'); 
-            if (loud) 
-                emit("<- Equal");
+        case EQUAL:
+            emit(EQU, 0, 0);
             break;
-        case NOTEQUAL: 
-            opstr.push_back('9');
-            if (loud)  
-                emit("<- not equal");
+        case NOTEQUAL:
+            emit(NEQ, 0, 0);
             break;
-        case LT: 
-            opstr += "10";
-            if (loud) 
-                emit("<- less than"); 
+        case LESS:
+            emit(LT, 0, 0);
             break;
-        case GT:
-            opstr += "11";
-            if (loud)
-                emit("<- greater than");
+        case LESSEQ:
+            emit(LTE, 0, 0);
+            break;
+        case GREATER:
+            emit(GT, 0, 0);
+            break;
+        case GREATEREQ:
+            emit(GTE, 0, 0);
             break;
         default:
-         opstr.push_back('z');
-         break;
+            break;
     }
 }
+
 
 void assignAddrToVarNames(SyntaxNode* x) {
     switch (x->nodeKind) {
         case STMTNODE:
-        if (x->node.stmt == ASSIGNSTM) {
+        if (x->node.stmt == ASSIGNSTM || x->node.stmt == FUNCDECL) {
             if (st.find(x->attribute.name) == -1) {
                 st.insert(x->attribute.name, memAddr++);
                 if (loud) cout<<"Assigned variable: "<<x->attribute.name<<" to memory address "<<memAddr - 1<<endl;
@@ -181,22 +172,17 @@ void generateStatement(SyntaxNode* x) {
     int s1, s2, cl, num_vars;
     switch (x->node.stmt) {
         case ASSIGNSTM: 
+            emit(LDC, 0, st.find(x->attribute.name));
             generate(x->child[0]);
-            codeIns = "sto 0, " + to_string(st.find(x->attribute.name));
-            if (loud) emit("<- save top of stack to mem address " + to_string(st.find(x->attribute.name)));
-            emit(codeIns);
+            emit(STO,st.find(x->attribute.name),0);
             break;
         case WHILESTM:
             while_body_label = emit_Label();
             cout<<"Added Label: "<<while_body_label<<endl;
             s1 = emitSkip(0);
-            emit("<- test condition");
             generate(x->child[1]);
-            emit("<- loop body");
             generate(x->child[0]);
-            emit("<- jump back to test.");
-            codeIns = "jeq 0, " + to_string(getLabelAddr(while_body_label));
-            emit(codeIns);
+            emit(JEQ, getLabelAddr(while_body_label), 0);
             break;
         case IFSTM:
             generate(x->child[0]);
@@ -205,45 +191,39 @@ void generateStatement(SyntaxNode* x) {
             s2 = emitSkip(1);
             cl = emitSkip(0);
             backUpEmit(s1);
-            codeIns = "jpc 0, " + to_string(cl);
-            emit(codeIns);
+            emit(JNE, cl, 0);
             restoreEmit();
             generate(x->child[2]);
             cl = emitSkip(0);
             backUpEmit(s2);
-            codeIns = "jmp 0, " + to_string(cl);
-            emit(codeIns);
+            emit(JMP, cl, 0);
             restoreEmit();
             break;
         case PRINTSTM:
             generate(x->child[0]);
-            codeIns = "pri"; 
-            emit(codeIns);
+            emit(PRI, 0, 0);
             break;
         case FUNCDECL:
             s1 = emitSkip(1);
-            cl = emitSkip(0);
-            level++;
-            emit("inc 0, " + to_string(countSiblings(x->child[1])));
-            st.insert(x->attribute.name, cl);
+            emit(ENT,st.find(x->attribute.name), 0);
             generate(x->child[1]);
-            emit("opr 0, 0");
-            level--;
+            emit(RET,0,0);
             cl = emitSkip(0);
             backUpEmit(s1);
-            emit("jmp 0, " + to_string(cl));
+            emit(JMP, cl, 0);
             restoreEmit();
             break;
         case PROCDCALL:
+            emit(MST, 0, 0);
             itr = x->child[1];
             while (itr != nullptr) {
                 generate(itr);
                 itr = itr->next;
             }
-            emit("cal 0, " + to_string(st.find(x->attribute.name)));
+            emit(CALL, st.find(x->attribute.name), 0);
             break;
         default:
-            cout<<"[!! WHAT? !!]"<<endl;
+            cout<<"[ WHAT? ]"<<endl;
             break;
     }
 }
@@ -252,26 +232,20 @@ void generateExpression(SyntaxNode* x) {
     string codeIns;
     switch(x->node.expr) {
         case CONST_EXPR: 
-            codeIns = "lit 0, " + to_string(x->attribute.val);
-            if (loud) 
-                emit("<- push " + to_string(x->attribute.val));
+            emit(LDC, 0, x->attribute.val);
             break;
         case ID_EXPR: 
-            codeIns = "lod " + to_string(level) + ", " + to_string(st.find(x->attribute.name));
-            if (loud)
-                emit("<- push contents of mem address " + to_string(st.find(x->attribute.name)) + " to top of stack");
+            emit(LOD, st.find(x->attribute.name), 0);
             break;
         case OP_EXPR: 
             generate(x->child[0]);
             generate(x->child[1]);
-            codeIns = "opr 0, ";
-            addInstructionToEmit(x->attribute.op, codeIns);
+            emitInstruction(x->attribute.op);
             break;
         default:
             cout<<"[!! WHAT? !!]"<<endl;
             break;
     }
-    emit(codeIns);
 }
 
 void generate(SyntaxNode* x) {
@@ -286,15 +260,18 @@ void generate(SyntaxNode* x) {
 }
 
 
-vector<string> generatePCodeFromAST(SyntaxNode* x, bool trace) {
+vector<Instruction> generatePCodeFromAST(SyntaxNode* x, bool trace) {
     loud = trace;
+    level = 0;
     init();
     traverse(x,  &assignAddrToVarNames, &nullop);
     generate(x);
-    code[codeIndex++] = "hlt";
+    code[codeIndex++] = Instruction(HLT, 0, 0);
     st.dumpTable();
-    for (int i = 0; i < codeIndex; i++)
-        cout<<code[i]<<endl;
+    for (int i = 0; i < codeIndex; i++) {
+        cout<<setw(2)<<i<<": ";
+        code[i].output(cout);
+    }
     return code;
 }
 

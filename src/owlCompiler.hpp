@@ -6,7 +6,6 @@
 #include "tokens.hpp"
 #include "codegen.hpp"
 #include "lexer.hpp"
-#include "owlmachine.hpp"
 #include "parser.hpp"
 #include "syntaxTree.hpp"
 using namespace std;
@@ -22,7 +21,7 @@ class OwlCompiler {
         OwlCompiler() {
 
         }
-        void compile(string codeFileName, string asmFilename, bool loud) {
+        vector<Instruction> compile(string codeFileName, string asmFilename, bool loud) {
             ifstream infile;
             vector<string> codeVec;
             infile.open(codeFileName);
@@ -32,13 +31,15 @@ class OwlCompiler {
                     codeVec.push_back(line);
                 }
                 infile.close();
-                compile(codeVec, asmFilename, loud);
+                return compile(codeVec, asmFilename, loud);
             }
+            return {};
         }
-        void compile(vector<string>& codeVec, string filename, bool loud) {
+        vector<Instruction> compile(vector<string>& codeVec, string filename, bool loud) {
             if (loud) {
-                cout<<"\n\n------------------------------\n";
+                cout<<"------------------------------\n";
                 cout<<"Phase 1: Lex & Parse."<<endl;
+                cout<<"------------------------------\n";
             }
             ts = lexer.tokenize(codeVec);
             if (loud) printTokenStream(ts);
@@ -46,22 +47,23 @@ class OwlCompiler {
             if (loud) printTree(ast);
 
             if (loud) {
-                cout<<"\n\n------------------------------\n";
+                cout<<"------------------------------\n";
                 cout<<"Phase 2: Code Generation."<<endl;
+                cout<<"------------------------------\n";
             }
 
-            vector<string> owl = generatePCodeFromAST(ast, loud);
+            vector<Instruction> owl = generatePCodeFromAST(ast, loud);
 
             ofstream outfile;
             outfile.open(filename);
             if (outfile.is_open()) {
-                for (string line : owl) {
-                    if (line.size() > 0)
-                        outfile << line << '\n';
+                for (Instruction line : owl) {
+                        line.output(outfile);
                 }
                 outfile.close();
             }
             cout<<"Compilation complete."<<endl;
+            return owl;
         }
 };
 

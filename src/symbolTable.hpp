@@ -109,6 +109,20 @@ class SymbolTable {
         void insert(string varname, int location) {
             root = put(root, varname, location);
         }
+        void popKey(string varname) {
+            link x = root;
+            while (x != nullptr) {
+                if (x->entry->varname == varname) {
+                    if (x->entry->next == nullptr)
+                        return;
+                    Entry* t = x->entry;
+                    x->entry = x->entry->next;
+                    delete t;
+                    return;
+                }
+                x = (varname < x->entry->varname) ? x->left:x->right;
+            }
+        }
         int find(string varname) {
             return get(root, varname);
         }
