@@ -1,3 +1,28 @@
+/*
+
+MIT License
+
+Copyright (c) 2024 Max Goren, http://www.maxgcoding.com
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+*/
 #ifndef owlvm_hpp
 #define owlvm_hpp
 #include <iostream>
@@ -6,6 +31,9 @@
 using namespace std;
 const int MAXSTACK = 2500;
 const int MAXCODE = 1000;
+enum TraceLevel {
+    OFF, ON, VERBOSE
+};
 
 class OwlVM {
     private:
@@ -25,7 +53,7 @@ class OwlVM {
         int findBase(int l);
     public:
         OwlVM();
-        void start();
+        void start(TraceLevel trace = OFF);
         void loadProgram(vector<Instruction> code);
 };
 
@@ -53,13 +81,15 @@ void OwlVM::loadProgram(vector<Instruction> code) {
     }
 }
 
-void OwlVM::start() {
+void OwlVM::start(TraceLevel trace) {
     cout<<"[OwlVM v0.2 Starting]\n";
     do {
         fetchInstruction();
-        currentInstruction.output(cout);
+        if (trace == ON || trace == VERBOSE)
+            currentInstruction.output(cout);
         executeInstruction();
-        printStack();
+        if (trace == VERBOSE)
+            printStack();
     } while (ip != 0);
     cout<<"[OwlVM Done.]"<<endl;
 }

@@ -23,33 +23,57 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 */
-#ifndef tokens_hpp
-#define tokens_hpp
 #include <iostream>
+#include "owlc.hpp"
+#include "backend/vm/owlvm.hpp"
+#include "backend/vm/owlvm_ds.hpp"
 using namespace std;
 
-enum TokenType {
-    NONE,ERROR,ENDFILE,
-    IF,THEN,ELSE,ENDIF,WHILE,PROG,FUNC,READ,PRINT,BEGIN,END, LET,
-    ID,NUM,
-    ASSIGN,NOTEQUAL,EQUAL,LESS,GREATER,LESSEQ,GREATEREQ,NOT,PLUS,MINUS,MULT,DIVD,LPAREN,RPAREN,QUOTE,SEMI,COMA
+vector<string> program = {
+    "program begin",
+    "   let x := 7;",
+    "   let y := 12;",
+    "   if (x < y) then",
+    "       print (x+y);",
+    "   end; ",
+    "end"
 };
 
-string tokenString[] = {
-    "NONE","ERROR","ENDFILE",
-    "IF","THEN","ELSE","ENDIF","WHILE", "PROG", "FUNC", "READ", "PRINT","BEGIN","END","LET",
-    "ID", "NUM",
-    "ASSIGN", "NOTEQUAL", "EQUAL", "LESS", "GREATER", "LESSEQ", "GREATEREQ","NOT", "PLUS", "MINUS", "MULT", "DIVD", "LPAREN", "RPAREN", "QUOTE", "SEMI", "COMA"
+vector<string> fibEx = {
+    "program begin",
+    "   let count := (0);",
+    "   let prev := (0);",
+    "   let curr := (1);",
+    "   let next := (0);",
+    "   print (prev);",
+    "   print (curr);",
+    "   while (count < 10) begin",
+    "       count := (count + 1);"
+    "       next := (curr + prev);",
+    "       print (next);",
+    "       prev := curr;",
+    "       curr := next;",
+    "   end;",
+    "end"
 };
 
-struct Token {
-    TokenType tokenval;
-    string stringval;
-    int numval;
-    int lineno;
-    Token(TokenType tt = NONE, string sv = "", int nv = -1) {
-        tokenval = tt; stringval = sv; numval = nv;
-    }
+vector<string> procEx = {
+    "program begin",
+    "   func addAndPrint(vara, varb) begin",
+    "       print (vara + varb);",
+    "   end;",
+    "   let i := (1);",
+    "   while (i < 7) begin",
+    "       addAndPrint(i, (i+2));",
+    "       i := (i + 1);",
+    "   end;",
+    "end"
 };
 
-#endif
+int main() {
+    OwlCompiler compiler; 
+    vector<Instruction> owlAsm = compiler.compile(fibEx, "asm.owlsm", false);
+    OwlVM owlvm;
+    owlvm.loadProgram(owlAsm);
+    owlvm.start(OFF);
+}

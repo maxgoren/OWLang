@@ -1,10 +1,39 @@
+/*
+
+MIT License
+
+Copyright (c) 2024 Max Goren, http://www.maxgcoding.com
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+*/
 #ifndef symbolTable_hpp
 #define symbolTable_hpp
 #include <iostream>
 using namespace std;
 
-//Simple AVLTree based symbol table used for associating 
-//variable names to memeory addresses during compilation
+//An AVL Tree with a twist: key collisions
+//are "stacked" at the node for controlling scope.
+//if the last entry is "popped", the node is tombstoned
+//instead of deleting the node, as there is a good 
+//chance it may be used again. This way we avoid costly
+//resturcturing/rebalancing.
 class SymbolTable {
     private:
         struct Entry {
@@ -118,7 +147,7 @@ class SymbolTable {
                 if (x->entry->varname == varname) {
                     //tombstone deletion on single entries.
                     if (x->entry->next == nullptr) {
-                        x->emtry->address = -1337;
+                        x->entry->address = -1337;
                         return;
                     }
                     Entry* t = x->entry;
