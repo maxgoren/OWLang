@@ -4,10 +4,10 @@
 #include <fstream>
 #include <vector>
 #include "tokens.hpp"
-#include "codegen.hpp"
-#include "lexer.hpp"
-#include "parser.hpp"
-#include "syntaxTree.hpp"
+#include "backend/codegen.hpp"
+#include "frontend/lexer.hpp"
+#include "frontend/parser.hpp"
+#include "ast/syntaxTree.hpp"
 using namespace std;
 
 
