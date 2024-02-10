@@ -4,9 +4,9 @@
 #include <vector>
 #include <iomanip>
 #include "Tokens.hpp"
-#include "syntaxtree.hpp"
-#include "symbolTable.hpp"
-#include "owlvm_ds.hpp"
+#include "../ast/syntaxTree.hpp"
+#include "../symboltable/symbolTable.hpp"
+#include "../backend/vm/owlvm_ds.hpp"
 using namespace std;
 
 //API for code generation
