@@ -1,28 +1,3 @@
-/*
-
-MIT License
-
-Copyright (c) 2024 Max Goren, http://www.maxgcoding.com
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-*/
 #ifndef owlvm_hpp
 #define owlvm_hpp
 #include <iostream>
@@ -41,19 +16,22 @@ class OwlVM {
         Instruction codePage[MAXCODE];
         int dstack[MAXSTACK];
         REGISTER sp;  //stack pointer
-        REGISTER fp; //frame pointer
-        REGISTER ip; //instruction pointerf
-        REGISTER lp; //local variable pointer
+        REGISTER BP; //frame pointer
+        REGISTER IP; //instruction pointerf
+       // REGISTER lp; //local variable pointer
+        REGISTER ep; //extreme pointer
         void init();
         Instruction currentInstruction;
         void fetchInstruction();
         void executeInstruction();
         void print();
         void printStack();
-        int findBase(int l);
+        int findParam(int n);
+        int findLocal(int n);
+        int nopcount;
     public:
         OwlVM();
-        void start(TraceLevel trace = OFF);
+        void start(TraceLevel tace = OFF);
         void loadProgram(vector<Instruction> code);
 };
 
@@ -62,17 +40,18 @@ OwlVM::OwlVM() {
 }
 
 void OwlVM::init() {
-    sp = 0;
-    fp = 1;
-    ip = 0;
-    lp = 0;
+    BP = 1;
+    sp = BP+2;
+    IP = 0;
+    ep = 0;
+    nopcount = 0;
     for (int i = 0; i < MAXSTACK; i++) {
         dstack[i] = 0;
     }
 }
 
 void OwlVM::fetchInstruction() {
-    currentInstruction = codePage[ip++];
+    currentInstruction = codePage[IP++];
 }
 
 void OwlVM::loadProgram(vector<Instruction> code) {
@@ -83,14 +62,15 @@ void OwlVM::loadProgram(vector<Instruction> code) {
 
 void OwlVM::start(TraceLevel trace) {
     cout<<"[OwlVM v0.2 Starting]\n";
+    printStack();
     do {
         fetchInstruction();
-        if (trace == ON || trace == VERBOSE)
+        if (trace == VERBOSE)
             currentInstruction.output(cout);
         executeInstruction();
-        if (trace == VERBOSE)
+        if (trace != OFF)
             printStack();
-    } while (ip != 0);
+    } while (currentInstruction.op != HLT);
     cout<<"[OwlVM Done.]"<<endl;
 }
 
@@ -100,25 +80,24 @@ void OwlVM::print() {
 }
 
 void OwlVM::printStack() {
-    cout<<"[ op:"<<instAsStr[currentInstruction.op]<<", ip: "<<ip<<", sp: "<<sp<<", fp: "<<fp;
+    cout<<"[ op:"<<instAsStr[currentInstruction.op]<<", IP: "<<IP<<", sp: "<<sp<<", BP: "<<BP;
     cout<<"] [ ";
     for (int i = 0; i < sp + 10; i++) {
-        if (i > sp && dstack[i] == 0 && dstack[i+1] == 0 && dstack[i+2] == 0 && dstack[i+3] == 0 &&dstack[i+4] == 0) {
+        if (i > sp+1 && dstack[i] == 0 && dstack[i+1] == 0 && dstack[i+2] == 0 && dstack[i+3] == 0 &&dstack[i+4] == 0) {
             break;
         }
-        if (i == fp) cout<<"| ";
-        cout<<dstack[i]<<" ";
+        if (i == BP) cout<<">|";
+        if (i == sp) cout<<"{";
+        cout<<dstack[i];
+        if (i == sp) cout<<"} ";
+        else cout<<" ";
     }
     cout<<"]"<<endl;
 }
 
-int OwlVM::findBase(int l) {
-    int nb = fp;
-    while (l > 0) {
-        nb = dstack[nb]; 
-        l--;
-    }
-    return nb+lp;
+
+int OwlVM::findLocal(int addr) {
+    return BP + 3 + addr;
 }
 
 void OwlVM::executeInstruction() {
@@ -130,46 +109,48 @@ void OwlVM::executeInstruction() {
         break;
     case LOD: //LOAD FROM ADDRESS
         sp++; 
-        dstack[sp] = dstack[findBase(0) + currentInstruction.addr]; 
+        dstack[sp] = dstack[findLocal(currentInstruction.addr)]; 
         break;
     case STO:
-        if (findBase(0)+currentInstruction.addr == 0) should_inc = true;
-        dstack[findBase(0) + currentInstruction.addr] = dstack[sp];
-        if (should_inc) lp++;
+        dstack[findLocal(currentInstruction.addr)] = dstack[sp];
+        if (findLocal(currentInstruction.addr) > ep) ep = findLocal(currentInstruction.addr);
         sp--;
         break;
     case MST: //MARK STACK
-        dstack[sp+1] = 0;
-        dstack[sp+2] = fp;
-        dstack[sp+3] = ip; //push the return address to stack;
-        fp = sp+1;
-        ip++;
+        dstack[ep+1] = 0;    //SAVE POSITION FOR RETURN VALUE
+        dstack[ep+2] = BP;   //PUSH FRAME POINTER;
+        dstack[ep+3] = 0;   //sAVE SPOT FOR RETURN ADDRESS;
+        dstack[ep+4] = ep;  //PUSH extreme pointer on stack
+        BP = ep +1;
+        sp = BP + 3;
         break;
     case CALL: //CALL PROCEDURE 
-        ip = currentInstruction.addr + 1;
+        dstack[BP+2] = IP; //PUSH RETURN ADDRESS ON TO STACK
+        IP = currentInstruction.addr + 1; //MAKE JUMP TO PROCEDURE
         break;
     case ENT: //ENTER PROCEDURE 
         //move stack pointer ahead of local params
-        lp = currentInstruction.val;
-        sp = fp + lp;
+        sp += currentInstruction.val;
         break;
     case RET: //return from procedure
-        sp = fp;        //reset stack ptr
-        ip = dstack[sp+3]; //pop return address off stack
-        fp = dstack[sp+2]; //set frameptr;
+        sp = BP-1;        //reset stack ptr
+        ep = sp;
+        IP = dstack[BP+2]; //pop return address off stack
+        BP = dstack[BP+1]; //set frameptr;
+        dstack[sp] = 0;
         break;
     case JMP:  //unconditional jump 
-        ip = currentInstruction.addr;
+        IP = currentInstruction.addr;
         break;
     case JEQ: //jump if true 
         if (dstack[sp] == 1) {
-            ip = currentInstruction.addr;
+            IP = currentInstruction.addr;
         }
         sp--;
         break;
     case JNE: //jump if false
         if (dstack[sp] == 0) {
-            ip = currentInstruction.addr;
+            IP = currentInstruction.addr;
         }
         sp--;
         break;
@@ -218,13 +199,15 @@ void OwlVM::executeInstruction() {
         dstack[sp] = (dstack[sp] >= dstack[sp+1]);
         break; 
     case LBL:
-    case NOP: 
-        ip++; 
+    case NOP:  
+        nopcount++;
+        if (nopcount == 3)
+            IP = 0;
         break;
     case PRI: 
         print(); 
         break;
-    case HLT: ip = 0; 
+    case HLT: IP = 0; 
         break;
     default:
         break;
