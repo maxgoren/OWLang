@@ -1,37 +1,12 @@
-/*
-
-MIT License
-
-Copyright (c) 2024 Max Goren, http://www.maxgcoding.com
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-*/
 #ifndef codegen_hpp
 #define codegen_hpp
 #include <iostream>
 #include <vector>
 #include <iomanip>
-#include "../globals/tokens.hpp"
-#include "../ast/syntaxTree.hpp"
-#include "../symboltable/symbolTable.hpp"
-#include "./vm/owlvm_ds.hpp"
+#include "Tokens.hpp"
+#include "syntaxtree.hpp"
+#include "symbolTable.hpp"
+#include "owlvm_ds.hpp"
 using namespace std;
 
 //API for code generation
@@ -74,9 +49,10 @@ vector<Instruction> getCode() {
 
 int labelNum = 0;
 string emit_Label() {
-    string label = "LBL" + to_string(labelNum) + ":";
+    string label = "LBL" + to_string(labelNum++) + ":";
     code[codeIndex] = Instruction(LBL, 0, 0);
     code[codeIndex].label = label;
+    cout<<"Label placed at: "<<codeIndex<<endl;
     codeIndex++;
     return label;
 }
@@ -84,7 +60,7 @@ string emit_Label() {
 int getLabelAddr(string l) {
     int i = 0;
     cout<<"Finding "<<l;
-    for (; i < codeIndex; i++) {
+    for (; i <= highCI; i++) {
         cout<<".";
         if (code[i].label == l) {
             cout<<" Found at address: "<<i<<endl;
@@ -190,7 +166,7 @@ int countSiblings(SyntaxNode* x) {
 }
 
 void generateStatement(SyntaxNode* x) {
-    string codeIns, while_body_label;
+    string codeIns, while_body_label, while_test_label, loop_exit_label;
     string if_body_label, else_body_label;
     string func_body_label;
     SyntaxNode* itr;
@@ -202,12 +178,16 @@ void generateStatement(SyntaxNode* x) {
             emit(STO,st.find(x->attribute.name),0);
             break;
         case WHILESTM:
-            while_body_label = emit_Label();
-            cout<<"Added Label: "<<while_body_label<<endl;
-            s1 = emitSkip(0);
-            generate(x->child[1]);
+            while_test_label = emit_Label();
             generate(x->child[0]);
-            emit(JEQ, getLabelAddr(while_body_label), 0);
+            s1 = emitSkip(1);
+            while_body_label = emit_Label();
+            generate(x->child[1]);
+            emit(JMP, getLabelAddr(while_test_label), 0);
+            loop_exit_label = emit_Label();
+            backUpEmit(s1);
+            emit(JNE, getLabelAddr(loop_exit_label), 0);
+            restoreEmit();
             break;
         case IFSTM:
             generate(x->child[0]);
@@ -230,7 +210,7 @@ void generateStatement(SyntaxNode* x) {
             break;
         case FUNCDECL:
             s1 = emitSkip(1);
-            emit(ENT,st.find(x->attribute.name), 0);
+            emit(ENT, st.find(x->attribute.name), countSiblings(x->child[1]));
             generate(x->child[1]);
             emit(RET,0,0);
             cl = emitSkip(0);
@@ -240,11 +220,7 @@ void generateStatement(SyntaxNode* x) {
             break;
         case PROCDCALL:
             emit(MST, 0, 0);
-            itr = x->child[1];
-            while (itr != nullptr) {
-                generate(itr);
-                itr = itr->next;
-            }
+            generate(x->child[1]);
             emit(CALL, st.find(x->attribute.name), 0);
             break;
         default:
@@ -291,7 +267,7 @@ vector<Instruction> generatePCodeFromAST(SyntaxNode* x, bool trace) {
     init();
     traverse(x,  &assignAddrToVarNames, &nullop);
     generate(x);
-    code[codeIndex++] = Instruction(HLT, 0, 0);
+    emit(HLT, 0, 0);
     st.dumpTable();
     for (int i = 0; i < codeIndex; i++) {
         cout<<setw(2)<<i<<": ";
