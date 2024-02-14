@@ -15,6 +15,7 @@ class OwlVM {
         typedef int REGISTER;
         Instruction codePage[MAXCODE];
         int dstack[MAXSTACK];
+        int stack_level;
         REGISTER sp;  //stack pointer
         REGISTER BP; //frame pointer
         REGISTER IP; //instruction pointerf
@@ -26,6 +27,7 @@ class OwlVM {
         void executeInstruction();
         void print();
         void printStack();
+        void printRegisters();
         int findParam(int n);
         int findLocal(int n);
         int nopcount;
@@ -39,11 +41,21 @@ OwlVM::OwlVM() {
     init();
 }
 
+void OwlVM::printRegisters() {
+    cout<<"Instruction: "<<instAsStr[currentInstruction.op]<<" "<<currentInstruction.addr<<" "<<currentInstruction.val<<endl;
+    cout<<"stack_level: "<<stack_level<<endl;
+    cout<<"BP: "<<BP<<endl;
+    cout<<"IP: "<<IP<<endl;
+    cout<<"SP: "<<sp<<endl;
+    cout<<"EP: "<<ep<<endl;
+}
+
 void OwlVM::init() {
+    stack_level = 1;
     BP = 1;
     sp = BP+2;
     IP = 0;
-    ep = 0;
+    ep =sp;
     nopcount = 0;
     for (int i = 0; i < MAXSTACK; i++) {
         dstack[i] = 0;
@@ -52,6 +64,10 @@ void OwlVM::init() {
 
 void OwlVM::fetchInstruction() {
     currentInstruction = codePage[IP++];
+    if (ep >= MAXSTACK - 30){
+        cout<<"[OUT OF STACK SPACE]"<<endl;
+        exit(0);
+    }
 }
 
 void OwlVM::loadProgram(vector<Instruction> code) {
@@ -65,8 +81,7 @@ void OwlVM::start(TraceLevel trace) {
     printStack();
     do {
         fetchInstruction();
-        if (trace == VERBOSE)
-            currentInstruction.output(cout);
+        //printRegisters();
         executeInstruction();
         if (trace != OFF)
             printStack();
@@ -80,7 +95,7 @@ void OwlVM::print() {
 }
 
 void OwlVM::printStack() {
-    cout<<"[ op:"<<instAsStr[currentInstruction.op]<<", IP: "<<IP<<", sp: "<<sp<<", BP: "<<BP;
+    cout<<"[ op:["<<instAsStr[currentInstruction.op]<<" "<<currentInstruction.addr<<" "<<currentInstruction.val<<"], IP: "<<IP<<", BP: "<<BP<<", SP: "<<sp<<", EP: "<<ep<<" SL: "<<stack_level<<" ";
     cout<<"] [ ";
     for (int i = 0; i < sp + 10; i++) {
         if (i > sp+1 && dstack[i] == 0 && dstack[i+1] == 0 && dstack[i+2] == 0 && dstack[i+3] == 0 &&dstack[i+4] == 0) {
@@ -96,8 +111,13 @@ void OwlVM::printStack() {
 }
 
 
-int OwlVM::findLocal(int addr) {
-    return BP + 3 + addr;
+int OwlVM::findLocal(int nst) {
+    int bl = BP;
+    while (nst > max(stack_level - 1, 0)) {
+        bl = dstack[bl];
+        nst--;
+    }
+    return bl + 4;
 }
 
 void OwlVM::executeInstruction() {
@@ -106,38 +126,43 @@ void OwlVM::executeInstruction() {
     case LDC: //LOAD CONSTANT 
         sp++;
         dstack[sp] = currentInstruction.val;  
+        if (sp > ep) ep = sp;
         break;
     case LOD: //LOAD FROM ADDRESS
         sp++; 
-        dstack[sp] = dstack[findLocal(currentInstruction.addr)]; 
+        dstack[sp] = dstack[findLocal(stack_level) + currentInstruction.addr]; 
+        if (sp > ep) ep = sp;
         break;
     case STO:
-        dstack[findLocal(currentInstruction.addr)] = dstack[sp];
-        if (findLocal(currentInstruction.addr) > ep) ep = findLocal(currentInstruction.addr);
-        sp--;
+        dstack[findLocal(stack_level) + currentInstruction.addr] = dstack[sp];
+        if ((findLocal(stack_level) + currentInstruction.addr) > ep) ep = sp;
+        //sp--;
         break;
     case MST: //MARK STACK
         dstack[ep+1] = 0;    //SAVE POSITION FOR RETURN VALUE
-        dstack[ep+2] = BP;   //PUSH FRAME POINTER;
+        dstack[ep+2] = BP+1;   //PUSH FRAME POINTER;
         dstack[ep+3] = 0;   //sAVE SPOT FOR RETURN ADDRESS;
         dstack[ep+4] = ep;  //PUSH extreme pointer on stack
-        BP = ep +1;
+        BP = ep+2;
         sp = BP + 3;
+        ep = sp;
+        stack_level++;
         break;
     case CALL: //CALL PROCEDURE 
         dstack[BP+2] = IP; //PUSH RETURN ADDRESS ON TO STACK
-        IP = currentInstruction.addr + 1; //MAKE JUMP TO PROCEDURE
+        IP = currentInstruction.addr+1; //MAKE JUMP TO PROCEDURE
         break;
     case ENT: //ENTER PROCEDURE 
         //move stack pointer ahead of local params
-        sp += currentInstruction.val;
+        sp += currentInstruction.val-1;
         break;
     case RET: //return from procedure
-        sp = BP-1;        //reset stack ptr
-        ep = sp;
+        sp = BP;            //reset stack ptr
+        ep = dstack[BP+3];  //reset extreme ptr
         IP = dstack[BP+2]; //pop return address off stack
-        BP = dstack[BP+1]; //set frameptr;
+        BP = dstack[findLocal(stack_level) + BP+1]; //reset frameptr;
         dstack[sp] = 0;
+        stack_level--;
         break;
     case JMP:  //unconditional jump 
         IP = currentInstruction.addr;
