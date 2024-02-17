@@ -3,10 +3,10 @@
 #include <iostream>
 #include <vector>
 #include <iomanip>
-#include "Tokens.hpp"
-#include "syntaxtree.hpp"
-#include "symbolTable.hpp"
-#include "owlvm_ds.hpp"
+#include "../globals/tokens.hpp"
+#include "../ast/syntaxTree.hpp"
+#include "../symbolTable/symbolTable.hpp"
+#include "vm/owlvm_ds.hpp"
 using namespace std;
 
 enum CodeGenState {

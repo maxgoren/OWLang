@@ -2,7 +2,7 @@
 #define lexer_hpp
 #include <iostream>
 #include <vector>
-#include "tokens.hpp"
+#include "../globals/tokens.hpp"
 using namespace std;
 
 struct TokenStreamNode {

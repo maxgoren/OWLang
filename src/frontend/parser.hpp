@@ -1,10 +1,10 @@
 #ifndef PARSER_HPP
 #define PARSER_HPP
 #include <iostream>
-#include "tokens.hpp"
+#include "../globals/tokens.hpp"
+#include "../ast/syntaxTree.hpp"
+#include "../symboltable/symbolTable.hpp"
 #include "lexer.hpp"
-#include "syntaxTree.hpp"
-#include "symbolTable.hpp"
 using namespace std;
 
 enum errorType {

@@ -138,6 +138,11 @@ class SymbolTable {
         ~SymbolTable() {
             cleanup(root);
         }
+        void clear() {
+            cleanup(root);
+            count = 0;
+            root = nullptr;
+        }
         void insert(string varname, int location) {
             root = put(root, varname, location);
         }
