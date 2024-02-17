@@ -134,7 +134,8 @@ int OwlVM::findLocal(int nst) {
 }
 
 void OwlVM::mark_stack() {
-   
+    sp++;
+   dstack[sp] = 0;
 }
 
 void OwlVM::ret_proc() {

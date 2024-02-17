@@ -130,6 +130,10 @@ TokenType OwlLexer::handleKeywordOrId(string word) {
         return LET;
     } else if (word == "program") {
         return PROG;
+    } else if (word == "return") {
+        return RETURN;
+    } else if (word == "array") {
+        return ARRAY;
     } else {
         return ID;
     }

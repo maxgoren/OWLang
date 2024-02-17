@@ -6,14 +6,14 @@ enum NodeType {
 };
 
 enum StatementType {
-    IFSTM, ASSIGNSTM, WHILESTM, PRINTSTM,READSTM,FUNCDECL, PROCDCALL
+    IFSTM, ASSIGNSTM, WHILESTM, PRINTSTM,READSTM,FUNCDECL, RETURNSTM
 };
-vector<string> StmtTypeStr = { "IFSTM", "ASSIGNSTM", "WHILESTM", "PRINTSTM", "READSTM", "FUNCDECL", "PROCDCALL"};
+vector<string> StmtTypeStr = { "IFSTM", "ASSIGNSTM", "WHILESTM", "PRINTSTM", "READSTM", "FUNCDECL", "RETURNSTM"};
 
 enum ExpressionType {
-    CONST_EXPR, OP_EXPR, ID_EXPR,
+    CONST_EXPR, OP_EXPR, ID_EXPR, PROCDCALL
 };
-vector<string> ExprTypeStr = { "CONST_EXPR", "OP_EXPR", "ID_EXPR", "PARAM_EXPR"};
+vector<string> ExprTypeStr = { "CONST_EXPR", "OP_EXPR", "ID_EXPR", "PROCDCALL"};
 
 const int MAXCHILD = 3;
 

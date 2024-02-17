@@ -5,7 +5,8 @@ using namespace std;
 
 
 vector<string> ifEx = {
-    "program begin",
+    "program ex1;",
+    "begin",
     "   let x := 7;",
     "   let y := 12;",
     "   if (x < y) then",
@@ -16,7 +17,8 @@ vector<string> ifEx = {
 
 
 vector<string> loopEx = {
-    "program begin",
+    "program loopEx;",
+    "begin",
     "   let x := (1);",
     "   while (x < 6) begin",
     "       print (x);",
@@ -26,7 +28,8 @@ vector<string> loopEx = {
 };
 
 vector<string> loop2Ex = {
-    "program begin",
+    "program loop2ex;",
+    "begin",
     "   let x := 1;",
     "   let y := 2;",
     "   while (y < 20) begin",
@@ -39,10 +42,12 @@ vector<string> loop2Ex = {
 };
 
 vector<string> procEx = {
-    "program begin",
+    "program proxEx;",
+    "begin",
     "   func myFunc(vx, vy) begin",
     "       let q := (vx + vy);",
     "       print (q);",
+    "       return q;",
     "   end;",
     "   let t := (1);",
     "   myFunc(t, (t+1));",
@@ -51,20 +56,22 @@ vector<string> procEx = {
 };
 
 vector<string> procLoopEx = {
-    "program begin",
+    "program procLoopEx;",
+    "begin",
     "   func myFunc(vx, vy) begin",
     "       print (vx+vy);",
     "   end;",
     "   let t := (1);",
     "   while (t < 5) begin",
-    "       myFunc(t, t);",
-    "       t := (t + 1);",
+    "       myFunc(t, t+1);",
+    "       t := (t+1);",
     "   end;",
     "end;"
 };
 
 vector<string> recursionEx = {
-    "program begin",
+    "program recursionEx;",
+    "begin",
     "   func addOneAndPrint(vara) begin",
     "       let t := (vara + 1);",
     "       if (vara < 5) then",
@@ -78,7 +85,8 @@ vector<string> recursionEx = {
 };
 
 vector<string> fibEx = {
-    "program begin",
+    "program fibEx;",
+    "begin",
     "   let prev := (0);",
     "   let curr := (1);",
     "   let next := (0);",
@@ -92,6 +100,8 @@ vector<string> fibEx = {
     "   end;",
     "end"
 };
+
+
 
 vector<vector<string>> programList = {
                                       ifEx, 

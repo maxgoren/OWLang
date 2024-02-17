@@ -239,11 +239,8 @@ void generateStatement(SyntaxNode* x) {
             emit(JMP, cl, 0);
             restoreEmit();
             break;
-        case PROCDCALL:
-            setState(FUNCPARAM);
-            emit(MST, 0, 0);
-            generate(x->child[1]);
-            emit(CALL, st.find(x->attribute.name), 0);
+        case RETURNSTM:
+            generate(x->child[0]);
             break;
         default:
             cout<<"[ WHAT? ]"<<endl;
@@ -264,6 +261,12 @@ void generateExpression(SyntaxNode* x) {
             generate(x->child[0]);
             generate(x->child[1]);
             emitInstruction(x->attribute.op);
+            break;
+        case PROCDCALL:
+            setState(FUNCPARAM);
+            emit(MST, 0, 0);
+            generate(x->child[1]);
+            emit(CALL, st.find(x->attribute.name), 0);
             break;
         default:
             cout<<"[!! WHAT? !!]"<<endl;

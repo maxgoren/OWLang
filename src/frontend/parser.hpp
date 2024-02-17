@@ -79,6 +79,7 @@ class OwlParser {
         link statementSequence();
         link statement();
         link assignStatement();
+        link returnStatement();
         link printStatement();
         link whileStatement();
         link ifStatement();
@@ -125,6 +126,8 @@ SyntaxNode* OwlParser::program() {
     link t = nullptr;
     onEnter("program");
     match(PROG);
+    match(ID);
+    match(SEMI);
     t = block();
     onExit("program");
     return t;
@@ -189,6 +192,10 @@ SyntaxNode* OwlParser::statement() {
         case ID:
             t = idStatement();
             break;
+        case RETURN:
+            match(RETURN);
+            t = returnStatement();
+            break;
         default:
             printError(UNKNOWNSYMBOL);
             break;
@@ -223,6 +230,14 @@ SyntaxNode* OwlParser::assignStatement() {
         printError(MISMATCH);
     }
     onExit("assignStatement");
+    return t;
+}
+
+SyntaxNode* OwlParser::returnStatement() {
+    link t = makeStatementNode(RETURNSTM);
+    onEnter("return statement");
+    t->child[0] = expression();
+    onExit("return statement");
     return t;
 }
 
@@ -291,7 +306,7 @@ SyntaxNode* OwlParser::paramList() {
 
 SyntaxNode* OwlParser::funcCall() {
     onEnter("funcCall");
-    link t = makeStatementNode(PROCDCALL);
+    link t = makeExpressionNode(PROCDCALL);
     t->attribute.name = lookahead().stringval;
     match(ID);
     match(LPAREN);
