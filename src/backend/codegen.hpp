@@ -9,6 +9,26 @@
 #include "owlvm_ds.hpp"
 using namespace std;
 
+enum CodeGenState {
+    NORMAL, FUNCPARAM, DONE
+};
+
+CodeGenState progress = DONE;
+
+int level() {
+    if (progress == FUNCPARAM)
+        return 1;
+    return 0;
+}
+
+void setState(CodeGenState st) {
+    progress = st;
+}
+
+CodeGenState getState() {
+    return progress;
+}
+
 //API for code generation
 vector<Instruction>  generatePCodeFromAST(SyntaxNode* x, bool trace);
 vector<Instruction>  getCode();
@@ -36,18 +56,19 @@ bool loud = false;
 vector<Instruction> code(1000);
 int codeIndex;
 int highCI;
-int level;
+int labelNum;
+
 void init() {
     codeIndex = 0;
     highCI = 0;
-    level = 0;
+    labelNum = 0;
+    st.clear();
 }
 
 vector<Instruction> getCode() {
     return code;
 }
 
-int labelNum = 0;
 string emit_Label() {
     string label = "LBL" + to_string(labelNum++) + ":";
     code[codeIndex] = Instruction(LBL, 0, 0);
@@ -172,10 +193,9 @@ void generateStatement(SyntaxNode* x) {
     SyntaxNode* itr;
     int s1, s2, cl, num_vars;
     switch (x->node.stmt) {
-        case ASSIGNSTM: 
-            emit(LDC, 0, st.find(x->attribute.name));
+        case ASSIGNSTM:
             generate(x->child[0]);
-            emit(STO,st.find(x->attribute.name),0);
+            emit(STO,st.find(x->attribute.name),level());
             break;
         case WHILESTM:
             while_test_label = emit_Label();
@@ -211,6 +231,7 @@ void generateStatement(SyntaxNode* x) {
         case FUNCDECL:
             s1 = emitSkip(1);
             emit(ENT, st.find(x->attribute.name), countSiblings(x->child[1]));
+            setState(NORMAL);
             generate(x->child[1]);
             emit(RET,0,0);
             cl = emitSkip(0);
@@ -219,6 +240,7 @@ void generateStatement(SyntaxNode* x) {
             restoreEmit();
             break;
         case PROCDCALL:
+            setState(FUNCPARAM);
             emit(MST, 0, 0);
             generate(x->child[1]);
             emit(CALL, st.find(x->attribute.name), 0);
@@ -236,7 +258,7 @@ void generateExpression(SyntaxNode* x) {
             emit(LDC, 0, x->attribute.val);
             break;
         case ID_EXPR: 
-            emit(LOD, st.find(x->attribute.name), 0);
+            emit(LOD, st.find(x->attribute.name), level());
             break;
         case OP_EXPR: 
             generate(x->child[0]);
@@ -263,11 +285,12 @@ void generate(SyntaxNode* x) {
 
 vector<Instruction> generatePCodeFromAST(SyntaxNode* x, bool trace) {
     loud = trace;
-    level = 0;
+    setState(NORMAL);
     init();
     traverse(x,  &assignAddrToVarNames, &nullop);
     generate(x);
     emit(HLT, 0, 0);
+    setState(DONE);
     st.dumpTable();
     for (int i = 0; i < codeIndex; i++) {
         cout<<setw(2)<<i<<": ";
