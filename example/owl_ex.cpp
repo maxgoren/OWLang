@@ -5,7 +5,7 @@ using namespace std;
 
 
 vector<string> ifEx = {
-    "program ex1;",
+    "program 'ifEx';",
     "begin",
     "   let x := 7;",
     "   let y := 12;",
@@ -17,9 +17,9 @@ vector<string> ifEx = {
 
 
 vector<string> loopEx = {
-    "program loopEx;",
+    "program 'loopEx';",
     "begin",
-    "   let x := (1);",
+    "   int x := (1);",
     "   while (x < 6) begin",
     "       print (x);",
     "       x := (x + 1);",
@@ -27,11 +27,22 @@ vector<string> loopEx = {
     "end"
 };
 
-vector<string> loop2Ex = {
-    "program loop2ex;",
+vector<string> noParamProcEx = {
+    "program 'noparamex';",
     "begin",
-    "   let x := 1;",
-    "   let y := 2;",
+    "   int t := (1);",
+    "   func myProc() begin",
+    "       print (t);",
+    "   end;",
+    "   myProc();",
+    "end"
+};
+
+vector<string> loop2Ex = {
+    "program 'loopTwoEx';",
+    "begin",
+    "   int x := 1;",
+    "   int y := 2;",
     "   while (y < 20) begin",
     "       let j := (x + y);",
     "       print j;",
@@ -42,14 +53,14 @@ vector<string> loop2Ex = {
 };
 
 vector<string> procEx = {
-    "program proxEx;",
+    "program 'proxEx';",
     "begin",
     "   func myFunc(vx, vy) begin",
-    "       let q := (vx + vy);",
+    "       int q := (vx + vy);",
     "       print (q);",
     "       return q;",
     "   end;",
-    "   let t := (1);",
+    "   int t := (1);",
     "   myFunc(t, (t+1));",
     "   print (42);"
     "end;"
@@ -61,7 +72,7 @@ vector<string> procLoopEx = {
     "   func myFunc(vx, vy) begin",
     "       print (vx+vy);",
     "   end;",
-    "   let t := (1);",
+    "   int t := (1);",
     "   while (t < 5) begin",
     "       myFunc(t, t+1);",
     "       t := (t+1);",
@@ -73,7 +84,7 @@ vector<string> recursionEx = {
     "program recursionEx;",
     "begin",
     "   func addOneAndPrint(vara) begin",
-    "       let t := (vara + 1);",
+    "       int t := (vara + 1);",
     "       if (vara < 5) then",
     "           print (vara);",
     "           addOneAndPrint(t);",
@@ -87,10 +98,10 @@ vector<string> recursionEx = {
 vector<string> fibEx = {
     "program fibEx;",
     "begin",
-    "   let prev := (0);",
-    "   let curr := (1);",
-    "   let next := (0);",
-    "   let count := (1);",
+    "   int prev := (0);",
+    "   int curr := (1);",
+    "   int next := (0);",
+    "   int count := (1);",
     "   while (count < 10) begin",
     "       count := (count + 1);",
     "       next := (curr + prev);",
@@ -104,21 +115,23 @@ vector<string> fibEx = {
 
 
 vector<vector<string>> programList = {
-                                      ifEx, 
-                                      loopEx, 
-                                      loop2Ex,
-                                      procEx, 
-                                      procLoopEx,
-                                      recursionEx,
-                                      fibEx
-                                      };
+        ifEx, 
+        loopEx, 
+        loop2Ex,
+        procEx, 
+        noParamProcEx,
+        procLoopEx,
+        recursionEx,
+        fibEx
+        };
 
 TraceLevel tl = OFF;
 
 void compileAndRun(vector<string> pg) {
     OwlVM owlvm;
-    OwlCompiler compiler; 
-    owlvm.loadProgram(compiler.compile(pg, "asm.owlsm", true));
+    OwlCompiler compiler;
+    auto ast = compiler.compile(pg, "asm.owlsm", true); 
+    owlvm.loadProgram(ast);
     owlvm.start(tl);
 }
 

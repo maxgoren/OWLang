@@ -128,6 +128,10 @@ TokenType OwlLexer::handleKeywordOrId(string word) {
         return WHILE;
     } else if (word == "let") {
         return LET;
+    } else if (word == "int") {
+        return INT;
+    } else if (word == "char") {
+        return CHAR;
     } else if (word == "program") {
         return PROG;
     } else if (word == "return") {
@@ -211,9 +215,9 @@ TokenStreamNode* OwlLexer::handleSpecials(string line, int& i, int lno) {
         nextToken.stringval = "!";
         nextToken.numval = -1;    
         return new TokenStreamNode(nextToken);
-    } else if (line[i] == '\'') {
+    } else if (line[i] == '\"') {
         nextToken.tokenval = QUOTE;
-        nextToken.stringval = "'";
+        nextToken.stringval = "\"";
         nextToken.numval = -1;    
         return new TokenStreamNode(nextToken);
     } else if (line[i] == ';') {
@@ -224,6 +228,11 @@ TokenStreamNode* OwlLexer::handleSpecials(string line, int& i, int lno) {
     } else if (line[i] == ',') {
         nextToken.tokenval = COMA;
         nextToken.stringval = ",";
+        nextToken.numval = -1;    
+        return new TokenStreamNode(nextToken);
+    } else if (line[i] == '\'') {
+        nextToken.tokenval = SQUOTE;
+        nextToken.stringval = "\'";
         nextToken.numval = -1;    
         return new TokenStreamNode(nextToken);
     } else {

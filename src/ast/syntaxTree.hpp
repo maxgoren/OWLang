@@ -1,25 +1,37 @@
 #ifndef SYNTAXTREE_HPP
 #define SYNTAXTREE_HPP
 #include "../globals/tokens.hpp"
+
 enum NodeType {
     STMTNODE, EXPRNODE
 };
 
 enum StatementType {
-    IFSTM, ASSIGNSTM, WHILESTM, PRINTSTM,READSTM,FUNCDECL, RETURNSTM
+    IFSTM, ASSIGNSTM, WHILESTM, 
+    PRINTSTM,READSTM,
+    FUNCDECL, RETURNSTM
 };
-vector<string> StmtTypeStr = { "IFSTM", "ASSIGNSTM", "WHILESTM", "PRINTSTM", "READSTM", "FUNCDECL", "RETURNSTM"};
 
 enum ExpressionType {
     CONST_EXPR, OP_EXPR, ID_EXPR, PROCDCALL
 };
+
+enum ValueType {
+    INTEGER, CHARACTER, VOID
+};
+
+vector<string> StmtTypeStr = { "IFSTM", "ASSIGNSTM", "WHILESTM", 
+                               "PRINTSTM", "READSTM", 
+                               "FUNCDECL", "RETURNSTM"};
 vector<string> ExprTypeStr = { "CONST_EXPR", "OP_EXPR", "ID_EXPR", "PROCDCALL"};
+vector<string> ValueTypeStr = { "INTEGER", "CHARACTER", "VOID"};
 
 const int MAXCHILD = 3;
 
 struct SyntaxNode {
     int lineNumber;
     NodeType nodeKind;
+    ValueType type;
     SyntaxNode *child[MAXCHILD];
     SyntaxNode *next;
     struct { StatementType stmt; ExpressionType expr; } node;

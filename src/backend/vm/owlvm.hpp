@@ -2,7 +2,8 @@
 #define owlvm_hpp
 #include <iostream>
 #include <vector>
-
+#include "../../frontend/lexer.hpp"
+#include "../../frontend/parser.hpp"
 #include "owlvm_ds.hpp"
 using namespace std;
 const int MAXSTACK = 2500;
@@ -45,6 +46,7 @@ class OwlVM {
         OwlVM();
         void start(TraceLevel tace = OFF);
         void loadProgram(vector<Instruction> code);
+        void repl();
 };
 
 OwlVM::OwlVM() {
@@ -98,6 +100,20 @@ void OwlVM::fetchInstruction() {
         cout<<"[OUT OF STACK SPACE]"<<endl;
         exit(0);
     }
+}
+
+void OwlVM::repl() {
+    OwlLexer lex;
+    OwlParser parser;
+    init();
+    cout<<"[OwlVM v0.2 Starting REPL]\n";
+    int i = 0;
+    string input;
+    do {
+        cout<<"["<<++i<<"]owl> ";
+        getline(cin, input);
+    } while (currentInstruction.op != HLT);
+    cout<<"[OwlVM Done.]"<<endl;
 }
 
 void OwlVM::loadProgram(vector<Instruction> code) {

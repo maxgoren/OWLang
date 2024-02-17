@@ -1,16 +1,28 @@
-LDC 0 1  
-STO 0 0  
+JMP 8 0  
 LBL 0 0 LBL0:
-LOD 0 0  
-LDC 0 6  
-LT 0 0  
-JNE 15 0  
-LBL 0 0 LBL1:
-LOD 0 0  
+ENT 0 1  
+LOD 1 0  
+LOD 2 0  
+ADI 0 0  
 PRI 0 0  
-LOD 0 0  
+RET 0 0  
+LDC 0 1  
+STO 3 0  
+LBL 0 0 LBL1:
+LOD 3 0  
+LDC 0 5  
+LT 0 0  
+JNE 27 0  
+LBL 0 0 LBL2:
+MST 0 0  
+LOD 3 1  
+LOD 3 1  
 LDC 0 1  
 ADI 0 0  
-STO 0 0  
-JMP 2 0  
+CALL 1 0  
+LOD 3 1  
+LDC 0 1  
+ADI 0 0  
+STO 3 1  
+JMP 10 0  
 HLT 0 0  

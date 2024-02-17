@@ -126,7 +126,9 @@ SyntaxNode* OwlParser::program() {
     link t = nullptr;
     onEnter("program");
     match(PROG);
+    match(SQUOTE);
     match(ID);
+    match(SQUOTE);
     match(SEMI);
     t = block();
     onExit("program");
@@ -169,6 +171,14 @@ SyntaxNode* OwlParser::statement() {
     link t = nullptr;
     onEnter("statement");
     switch (lookahead().tokenval) {
+        case CHAR:
+            match(CHAR);
+            t = assignStatement();
+            break;
+        case INT:
+            match(INT);
+            t = assignStatement();
+            break;
         case LET:
             match(LET);
             t = assignStatement();
@@ -291,14 +301,19 @@ SyntaxNode* OwlParser::funcDecl() {
 }
 
 SyntaxNode* OwlParser::paramList() {
+    link t = nullptr;
     onEnter("paramList");
-    link t = factor();
-    link m = t;
-    while (lookahead().tokenval == COMA) {
-        match(COMA);
-        link p = factor();
-        m->next = p;
-        m = p;
+    if (lookahead().tokenval == RPAREN) {
+        return t;
+    } else {
+        t = factor();
+        link m = t;
+        while (lookahead().tokenval == COMA) {
+            match(COMA);
+            link p = factor();
+            m->next = p;
+            m = p;
+        }
     }
     onExit("paramList");
     return t;
@@ -310,23 +325,29 @@ SyntaxNode* OwlParser::funcCall() {
     t->attribute.name = lookahead().stringval;
     match(ID);
     match(LPAREN);
-    t->child[1] = argList();
+    if (lookahead().tokenval != RPAREN)
+        t->child[1] = argList();
     match(RPAREN);
     onExit("funcCall");
     return t;
 }
 
 SyntaxNode* OwlParser::argList() {
-    onEnter("paramList");
-    link t = expression();
-    link m = t;
-    while (lookahead().tokenval == COMA) {
-        match(COMA);
-        link p = expression();
-        m->next = p;
-        m = p;
+    link t = nullptr;
+    onEnter("argList");
+    if (lookahead().tokenval == RPAREN) {
+        match(RPAREN);
+    } else {
+        t = expression();
+        link m = t;
+        while (lookahead().tokenval == COMA) {
+            match(COMA);
+            link p = expression();
+            m->next = p;
+            m = p;
+        }
     }
-    onExit("paramList");
+    onExit("argList");
     return t;
 }
 
@@ -389,7 +410,8 @@ SyntaxNode* OwlParser::factor() {
         match(NUM);
     } else if (lookahead().tokenval == LPAREN) {
         match(LPAREN);
-        t = expression();
+        if (lookahead().tokenval != RPAREN)
+            t = expression();
         expect(RPAREN);
     } else {
         printError(UNKNOWNSYMBOL);

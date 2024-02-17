@@ -27,24 +27,12 @@ enum vmop {
 };
 
 vector<string> instAsStr = {
-    "LBL", //label
-    "LDC", //LOAD CONSTANT 
-    "LDA", //LOAD ADDRESS 
-    "LOD", //LOAD FROM ADDRESS
-    "STO", //STORE TO ADDRESS
-    "MST", //MARK STACK 
-    "CALL", //CALL PROCEDURE 
-    "ENT", //ENTER PROCEDURE 
-    "RET", //return from procedure
-    "JMP", //unconditional jump 
-    "JEQ", //jump if true 
-    "JNE", //jump if false
-    "ADI", "SBI", "MPI", "DVI", //integer math
-    "NEG",
-    "EQU", "NEQ", "LT", "LTE", "GT", "GTE", //relops 
-    "NOP",
-    "PRI",
-    "HLT"
+    "LBL", "LDC", "LDA", "LOD", "STO", 
+    "MST", "CALL", "ENT", "RET",
+    "JMP", "JEQ", "JNE", 
+    "ADI", "SBI", "MPI", "DVI", "NEG",
+    "EQU", "NEQ", "LT", "LTE", "GT", "GTE", 
+    "NOP", "PRI", "HLT"
 };
 
 struct Instruction {

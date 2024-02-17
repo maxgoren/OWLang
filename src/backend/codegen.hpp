@@ -3,6 +3,7 @@
 #include <iostream>
 #include <vector>
 #include <iomanip>
+#include <map>
 #include "../globals/tokens.hpp"
 #include "../ast/syntaxTree.hpp"
 #include "../symbolTable/symbolTable.hpp"
@@ -50,6 +51,7 @@ void           addInstructionToEmit(TokenType tt, string& opstr);
 void           assignAddrToVarNames(SyntaxNode* x);
 int            getLabelAddr(string lbl);
 
+map<string, string> procedureLabels;
 SymbolTable st;
 int memAddr = 0;
 bool loud = false;
@@ -229,7 +231,7 @@ void generateStatement(SyntaxNode* x) {
             emit(PRI, 0, 0);
             break;
         case FUNCDECL:
-            s1 = emitSkip(1);
+            s1 = emitSkip(2);
             emit(ENT, st.find(x->attribute.name), countSiblings(x->child[1]));
             setState(NORMAL);
             generate(x->child[1]);
@@ -237,6 +239,8 @@ void generateStatement(SyntaxNode* x) {
             cl = emitSkip(0);
             backUpEmit(s1);
             emit(JMP, cl, 0);
+            func_body_label = emit_Label();
+            procedureLabels[x->attribute.name] = func_body_label;
             restoreEmit();
             break;
         case RETURNSTM:
@@ -266,7 +270,7 @@ void generateExpression(SyntaxNode* x) {
             setState(FUNCPARAM);
             emit(MST, 0, 0);
             generate(x->child[1]);
-            emit(CALL, st.find(x->attribute.name), 0);
+            emit(CALL, getLabelAddr(procedureLabels[x->attribute.name]), 0);
             break;
         default:
             cout<<"[!! WHAT? !!]"<<endl;
