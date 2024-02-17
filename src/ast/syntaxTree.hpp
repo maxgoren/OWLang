@@ -1,32 +1,6 @@
-/*
-
-MIT License
-
-Copyright (c) 2024 Max Goren, http://www.maxgcoding.com
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-*/
-
 #ifndef SYNTAXTREE_HPP
 #define SYNTAXTREE_HPP
-#include "../globals/tokens.hpp"
+#include "Tokens.hpp"
 enum NodeType {
     STMTNODE, EXPRNODE
 };
@@ -37,9 +11,9 @@ enum StatementType {
 vector<string> StmtTypeStr = { "IFSTM", "ASSIGNSTM", "WHILESTM", "PRINTSTM", "READSTM", "FUNCDECL", "PROCDCALL"};
 
 enum ExpressionType {
-    CONST_EXPR, OP_EXPR, ID_EXPR
+    CONST_EXPR, OP_EXPR, ID_EXPR,
 };
-vector<string> ExprTypeStr = { "CONST_EXPR", "OP_EXPR", "ID_EXPR"};
+vector<string> ExprTypeStr = { "CONST_EXPR", "OP_EXPR", "ID_EXPR", "PARAM_EXPR"};
 
 const int MAXCHILD = 3;
 
@@ -82,7 +56,7 @@ void printNode(SyntaxNode* x) {
     if (x != nullptr) {
         if (x->nodeKind == EXPRNODE) cout<<"["<<ExprTypeStr[x->node.expr]<<"]";
         else if (x->nodeKind == STMTNODE) cout<<"["<<StmtTypeStr[x->node.stmt]<<"]";
-        else cout<<"[what?]"<<endl;
+        else cout<<"[what? : "<<x->nodeKind<<"]"<<endl;
         cout<<" - { name: "<<((x->attribute.name.size() > 0) ? x->attribute.name:"[0xff]")<<", val: "<<flush;
         cout<<((x->attribute.val >= 0) ? to_string(x->attribute.val):"[0xff]")<<", op: "<<flush;
         cout<<((x->attribute.op > 0) ? tokenString[x->attribute.op]:"[0xff]")<<"}"<<endl;
