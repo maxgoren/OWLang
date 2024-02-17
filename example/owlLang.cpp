@@ -1,86 +1,129 @@
 #include <iostream>
-#include <vector>
-#include "../src/owlCompiler.hpp"
+#include "owlCompiler.hpp"
+#include "owlvm.hpp"
 using namespace std;
 
-vector<string> ex1 = {
-        "program begin", 
-            "let myVar := (15 + 5);",
-            "let myOtherVar := (20 + (30  + 1));",
-            "print myVar;",
-            "print myOtherVar;",
-            "let varb := (myVar + myOtherVar);",
-            "print varb;"
-        "end" 
-};
 
-vector<string> ex2 = {
+vector<string> ifEx = {
     "program begin",
-    "   func add(va,vb) begin",
-    "       let vm := (va + vb);",
-    "       print (vm);",
-    "   end;",
-    "   add(3,5);",
-    "   add(1,2);",
-    "   add(11,9);",
+    "   let x := 7;",
+    "   let y := 12;",
+    "   if (x < y) then",
+    "       print (x+y);",
+    "   end; ",
     "end"
 };
 
 
-vector<string> ex3 = {
+vector<string> loopEx = {
     "program begin",
-    "   if (3 < 6) then",
-    "       print 42;",
-    "   else",
-    "       print 16;",
-    "       print 33;",
-    "   end;",
-    "   if (7 < 3) then",
-    "       print 42;",
-    "   else",
-    "       print 13;",
+    "   let x := (1);",
+    "   while (x < 6) begin",
+    "       print (x);",
+    "       x := (x + 1);",
     "   end;",
     "end"
 };
 
+vector<string> loop2Ex = {
+    "program begin",
+    "   let x := 1;",
+    "   let y := 2;",
+    "   while (y < 20) begin",
+    "       let j := (x + y);",
+    "       print j;",
+    "       x := (x + 1);",
+    "       y := (y + 1);",
+    "   end;",
+    "end"
+};
 
-vector<string> loopAndFuncEx = {
-        "program begin",
-        "   let count := 1;",
-        "   func helloworld(varB) begin",
-        "         print (varB);",
-        "   end;",
-        "   while (count < 5) begin",
-        "       helloworld(count);",
-        "       count := (count + 1);",
-        "   end;",
-        "end"
+vector<string> procEx = {
+    "program begin",
+    "   func myFunc(vx, vy) begin",
+    "       let q := (vx + vy);",
+    "       print (q);",
+    "   end;",
+    "   let t := (1);",
+    "   myFunc(t, (t+1));",
+    "   print (42);"
+    "end;"
+};
+
+vector<string> procLoopEx = {
+    "program begin",
+    "   func myFunc(vx, vy) begin",
+    "       print (vx+vy);",
+    "   end;",
+    "   let t := (1);",
+    "   while (t < 5) begin",
+    "       myFunc(t, t);",
+    "       t := (t + 1);",
+    "   end;",
+    "end;"
+};
+
+vector<string> recursionEx = {
+    "program begin",
+    "   func addOneAndPrint(vara) begin",
+    "       let t := (vara + 1);",
+    "       if (vara < 5) then",
+    "           print (vara);",
+    "           addOneAndPrint(t);",
+    "       end;",
+    "   end;",
+    "   addOneAndPrint(1);",
+    "   print (42);",
+    "end"
 };
 
 vector<string> fibEx = {
-        "program begin", 
-            "let count := 0;",
-            "let prev := 0;",
-            "let curr := 1;",
-            "let next := 0;",
-            "while (count < 10) begin",
-            "    print (curr);",
-            "    count := (count + 1);",
-            "    next := (curr + prev);",
-            "    prev := (curr);",
-            "    curr := (next);",
-            "end;",
-        "end" 
+    "program begin",
+    "   let prev := (0);",
+    "   let curr := (1);",
+    "   let next := (0);",
+    "   let count := (1);",
+    "   while (count < 10) begin",
+    "       count := (count + 1);",
+    "       next := (curr + prev);",
+    "       print (next);",
+    "       prev := curr;",
+    "       curr := next;",
+    "   end;",
+    "end"
 };
 
+vector<vector<string>> programList = {
+                                      ifEx, 
+                                      loopEx, 
+                                      loop2Ex,
+                                      procEx, 
+                                      procLoopEx,
+                                      recursionEx,
+                                      fibEx
+                                      };
 
-int main(int argc, char* argv[]) {
-        OwlCompiler omc;
-        OwlMachine ovm;
-        omc.compile(ex2, "fib.owlsm", true);
-        ovm.loadProgramFromFile("fib.owlsm");
-        ovm.start(true);
-        cout<<"------------------------"<<endl;
-    return 0;
+TraceLevel tl = OFF;
+
+void compileAndRun(vector<string> pg) {
+    OwlVM owlvm;
+    OwlCompiler compiler; 
+    owlvm.loadProgram(compiler.compile(pg, "asm.owlsm", true));
+    owlvm.start(tl);
 }
 
+
+int main(int argc, char *argv[]) {
+    if (argc < 2)
+        tl = OFF;
+    else {
+         if (argv[1][0] == 'v') { 
+            tl = VERBOSE;
+         } else if (argv[1][0] == 'd') {
+            tl = ON;
+         } else {
+            tl = OFF;
+         }
+    }
+    compileAndRun(programList[atoi(argv[2])]);
+}
