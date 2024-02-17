@@ -7,6 +7,8 @@ of programming language design with a focus on compiler implementation. The "One
 is intended to help learn the fundamentals of implementing a compiler for a programming language in a relaxed, fun way 
 that can be accomplished by a someone familiar with programming, but not necessarily compilers, in "one weekend"(YTMV).
 
+Despite begin a "toy" language, Owl is surprisingly featured, including control flow using if/then statements, while loops,
+procedures(with recursion!), and arrays.
 
 ## Ok, So wheres the "One Weekend" Thing?
 The actual "lessons" are still a work in progress, but the "curriculum" is developed to be covered 
