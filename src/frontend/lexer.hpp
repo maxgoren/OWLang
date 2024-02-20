@@ -156,11 +156,26 @@ TokenStreamNode* OwlLexer::handleSpecials(string line, int& i, int lno) {
         nextToken.stringval = ")";
         nextToken.numval = -1;    
         return new TokenStreamNode(nextToken);
+    } else if (line[i] == '[') {
+        nextToken.tokenval = LSQBRACKET;
+        nextToken.stringval = "[";
+        nextToken.numval = -1;    
+        return new TokenStreamNode(nextToken);
+    } else if (line[i] == ']') {
+        nextToken.tokenval = RSQBRACKET;
+        nextToken.stringval = "]";
+        nextToken.numval = -1;    
+        return new TokenStreamNode(nextToken);
     } else if (line[i] == ':' && i+1 < line.size() && line[i+1] == '=') {
         i+=2;
         nextToken.tokenval = ASSIGN;
         nextToken.stringval = ":=";
         nextToken.numval = -1;    
+        return new TokenStreamNode(nextToken);
+    } else if (line[i] == ':') {
+        nextToken.tokenval = COLON;
+        nextToken.stringval = ":";
+        nextToken.numval = -1;
         return new TokenStreamNode(nextToken);
     } else if (line[i] == '!' && i+1 < line.size() && line[i+1] == '=') {
         i+=2;

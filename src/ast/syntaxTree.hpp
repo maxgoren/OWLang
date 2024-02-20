@@ -9,33 +9,37 @@ enum NodeType {
 enum StatementType {
     IFSTM, ASSIGNSTM, WHILESTM, 
     PRINTSTM,READSTM,
-    FUNCDECL, RETURNSTM
+    FUNCDECL, RETURNSTM, ARRAYSTM, VARDECLSTM, EXPRSTM
 };
 
 enum ExpressionType {
-    CONST_EXPR, OP_EXPR, ID_EXPR, PROCDCALL
+    CONST_EXPR, OP_EXPR, ID_EXPR, PROCDCALL, SUBSCIPT_EXPR
 };
 
 enum ValueType {
     INTEGER, CHARACTER, VOID
 };
 
+enum StoreAs {
+    GLOBAL, LOCAL
+};
+
 vector<string> StmtTypeStr = { "IFSTM", "ASSIGNSTM", "WHILESTM", 
                                "PRINTSTM", "READSTM", 
-                               "FUNCDECL", "RETURNSTM"};
-vector<string> ExprTypeStr = { "CONST_EXPR", "OP_EXPR", "ID_EXPR", "PROCDCALL"};
+                               "FUNCDECL", "RETURNSTM", "ARRAYSTM", "VARDECLSTM", "EXPRSTM"};
+vector<string> ExprTypeStr = { "CONST_EXPR", "OP_EXPR", "ID_EXPR", "PROCDCALL", "SUBSCRIPT_EXPR"};
 vector<string> ValueTypeStr = { "INTEGER", "CHARACTER", "VOID"};
+vector<string> StoreAsStr = { "GLOBAL", "LOCAL" };
 
 const int MAXCHILD = 3;
 
 struct SyntaxNode {
     int lineNumber;
     NodeType nodeKind;
-    ValueType type;
     SyntaxNode *child[MAXCHILD];
     SyntaxNode *next;
     struct { StatementType stmt; ExpressionType expr; } node;
-    struct { TokenType op; int val; string name; } attribute;
+    struct { TokenType op; int val; string name; ValueType type; StoreAs store; } attribute;
     SyntaxNode(Token token = NONE) {
         attribute.op = token.tokenval;
         attribute.name = token.stringval;
@@ -71,7 +75,8 @@ void printNode(SyntaxNode* x) {
         else cout<<"[what? : "<<x->nodeKind<<"]"<<endl;
         cout<<" - { name: "<<((x->attribute.name.size() > 0) ? x->attribute.name:"[0xff]")<<", val: "<<flush;
         cout<<((x->attribute.val >= 0) ? to_string(x->attribute.val):"[0xff]")<<", op: "<<flush;
-        cout<<((x->attribute.op > 0) ? tokenString[x->attribute.op]:"[0xff]")<<"}"<<endl;
+        cout<<((x->attribute.op > 0) ? tokenString[x->attribute.op]:"[0xff]")<<" store: "<<flush;
+        cout<<StoreAsStr[x->attribute.store]<<"}"<<endl;
     }
 }
 

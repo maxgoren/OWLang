@@ -31,8 +31,18 @@ void onExit(string s) {
     --ind;
 }
 
+
+bool flip_type = false;
+enum ParserState {
+    GLOBAL_BODY, PROCEDURE_BODY
+};
+
 class OwlParser {
     private:
+        ParserState parseState;
+        void setParserState(ParserState ps) {
+            parseState = ps;
+        }
         using node = SyntaxNode;
         using link = node*;
         int matchFail;
@@ -62,6 +72,7 @@ class OwlParser {
                 return true;
             }
             matchFail++;
+            cout<<"Match Failure: "<<lookahead().stringval<<endl;
             if (matchFail > 5) {
                 cout<<"Too many mismatches, bailing out."<<endl;
                 exit(0);
@@ -78,18 +89,21 @@ class OwlParser {
         link block();
         link statementSequence();
         link statement();
-        link assignStatement();
+        link declareArrayStatement();
+        link declareFuncStatement();
+        link declareVarStatement();
         link returnStatement();
         link printStatement();
         link whileStatement();
         link ifStatement();
-        link idStatement();
-        link funcDecl();
+        link exprStatement();
         link paramList();
         link funcCall();
         link argList();
         link expression();
         link alg_expression();
+        link var();
+        link varDecl();
         link term();
         link factor();
     public:
@@ -125,6 +139,7 @@ SyntaxNode* OwlParser::parse(TokenStream ts, bool trace) {
 SyntaxNode* OwlParser::program() {
     link t = nullptr;
     onEnter("program");
+    setParserState(GLOBAL_BODY);
     match(PROG);
     match(SQUOTE);
     match(ID);
@@ -171,17 +186,9 @@ SyntaxNode* OwlParser::statement() {
     link t = nullptr;
     onEnter("statement");
     switch (lookahead().tokenval) {
-        case CHAR:
-            match(CHAR);
-            t = assignStatement();
-            break;
-        case INT:
-            match(INT);
-            t = assignStatement();
-            break;
         case LET:
             match(LET);
-            t = assignStatement();
+            t = declareVarStatement();
             break;
         case WHILE:
             match(WHILE);
@@ -191,20 +198,20 @@ SyntaxNode* OwlParser::statement() {
             match(IF);
             t = ifStatement();
             break;
+        case RETURN:
+            match(RETURN);
+            t = returnStatement();
+            break;
         case PRINT:
             match(PRINT);
             t = printStatement();
             break;
         case FUNC:
             match(FUNC);
-            t = funcDecl();
+            t = declareFuncStatement();
             break;
         case ID:
-            t = idStatement();
-            break;
-        case RETURN:
-            match(RETURN);
-            t = returnStatement();
+            t = exprStatement();
             break;
         default:
             printError(UNKNOWNSYMBOL);
@@ -214,32 +221,95 @@ SyntaxNode* OwlParser::statement() {
     return t;
 }
 
-SyntaxNode* OwlParser::idStatement() {
-    onEnter("idStatement");
-    SyntaxNode* t;
-    cout<<tokenString[lookahead().tokenval]<<", next: "<<tokenString[streamIter.peekRightOne().tokenval]<<endl;
-    if (procedureNames.find(lookahead().stringval) != -1) {
-        t = funcCall();
-    }
-    if (streamIter.peekRightOne().tokenval == ASSIGN) {
-        t = assignStatement();
-    }
-    onExit("idStatement");
+SyntaxNode* OwlParser::declareFuncStatement() {
+    onEnter("declareFuncStatement");
+    link t = makeStatementNode(FUNCDECL);
+    t->attribute.name = lookahead().stringval;
+    match(ID);
+    cout<<"Added "<<t->attribute.name<<" to list of procedure names."<<endl;
+    procedureNames.insert(t->attribute.name, 0);
+    match(LPAREN);
+    setParserState(PROCEDURE_BODY);
+    t->child[0] = paramList();
+    match(RPAREN);
+    t->child[1] = block();
+    setParserState(GLOBAL_BODY);
+    onExit("declareFuncStatement");
     return t;
 }
 
-SyntaxNode* OwlParser::assignStatement() {
-    onEnter("assignStatement");
-    link t = makeStatementNode(ASSIGNSTM);
-    if (lookahead().tokenval == ID) {
-        t->attribute.name = lookahead().stringval;
-        match(ID);
-        expect(ASSIGN);
-        t->child[0] = expression();
-    } else {
-        printError(MISMATCH);
+SyntaxNode* OwlParser::declareVarStatement() {
+    link t = makeStatementNode(VARDECLSTM);
+    onEnter("declareVarStatement");
+    t->attribute.name = lookahead().stringval;
+    t->attribute.store = parseState == PROCEDURE_BODY ? LOCAL:GLOBAL;
+    match(ID);
+    if (lookahead().tokenval == LSQBRACKET) {
+        match(LSQBRACKET);
+        t->attribute.val = lookahead().numval;
+        match(NUM);
+        match(RSQBRACKET);
     }
-    onExit("assignStatement");
+    match(COLON);
+    if (lookahead().tokenval == INT) {
+        match(INT);
+    } else if (lookahead().tokenval == ARRAY) {
+        match(ARRAY);
+    }
+    onExit("declareVarStatement");
+    return t;
+}
+
+
+SyntaxNode* OwlParser::exprStatement() {
+    onEnter("exprStatement");
+    link t = makeStatementNode(EXPRSTM);
+    if (lookahead().tokenval == ID) {
+        t->child[0] = var();
+        if (lookahead().tokenval == ASSIGN) {
+            link p = makeStatementNode(ASSIGNSTM);
+            p->attribute.op = ASSIGN;
+            match(ASSIGN);
+            p->child[0] = t->child[0];
+            p->child[1] = expression();
+            t->child[0] = p;
+        } else if (lookahead().tokenval == LPAREN) {
+            link p = makeExpressionNode(PROCDCALL);
+            p->attribute.name = t->child[0]->attribute.name;
+            match(LPAREN);
+            if (lookahead().tokenval != RPAREN) {
+                link td = t->child[0];
+                p->child[0] = t->child[0];
+                p->child[1] = argList();
+                p->child[0] = nullptr;
+                t->child[0] = p;
+                delete td;
+            }
+            match(RPAREN);
+        }
+    } else {
+        t->child[0] = alg_expression();
+    }
+    onExit("exprStatement");
+    return t;
+}
+
+SyntaxNode* OwlParser::var() {
+    link t = makeExpressionNode(ID_EXPR);
+    onEnter("var");
+    t->attribute.name = lookahead().stringval;
+    t->attribute.store = parseState == PROCEDURE_BODY ? LOCAL:GLOBAL;
+    if (lookahead().tokenval == ID) {
+        match(ID);
+        if (lookahead().tokenval == LSQBRACKET) {
+            match(LSQBRACKET);
+            t->child[0] = expression();
+            match(RSQBRACKET);
+            t->child[0]->node.expr = ID_EXPR;
+            t->node.expr = SUBSCIPT_EXPR;
+        }
+    }
+    onExit("var");
     return t;
 }
 
@@ -285,20 +355,6 @@ SyntaxNode* OwlParser::ifStatement() {
     return t;
 }
 
-SyntaxNode* OwlParser::funcDecl() {
-    onEnter("funcDecl");
-    link t = makeStatementNode(FUNCDECL);
-    t->attribute.name = lookahead().stringval;
-    match(ID);
-    cout<<"Added "<<t->attribute.name<<" to list of procedure names."<<endl;
-    procedureNames.insert(t->attribute.name, 0);
-    match(LPAREN);
-    t->child[0] = paramList();
-    match(RPAREN);
-    t->child[1] = block();
-    onExit("funcDecl");
-    return t;
-}
 
 SyntaxNode* OwlParser::paramList() {
     link t = nullptr;
@@ -323,7 +379,6 @@ SyntaxNode* OwlParser::funcCall() {
     onEnter("funcCall");
     link t = makeExpressionNode(PROCDCALL);
     t->attribute.name = lookahead().stringval;
-    match(ID);
     match(LPAREN);
     if (lookahead().tokenval != RPAREN)
         t->child[1] = argList();
@@ -397,13 +452,14 @@ SyntaxNode* OwlParser::term() {
     return t;
 }
 
+
 SyntaxNode* OwlParser::factor() {
     link t = nullptr;
     onEnter("factor");
-    if (lookahead().tokenval == ID) {
-        t = makeExpressionNode(ID_EXPR);
-        t->attribute.name = lookahead().stringval;
-        match(ID);
+    if (lookahead().tokenval == ID && procedureNames.find(lookahead().stringval) != -1) {
+        t = funcCall();
+    } else if (lookahead().tokenval == ID) {
+        t = var();
     } else if (lookahead().tokenval == NUM) {
         t = makeExpressionNode(CONST_EXPR);
         t->attribute.val = lookahead().numval;

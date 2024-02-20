@@ -10,6 +10,8 @@ enum vmop {
     LDC, //LOAD CONSTANT 
     LDA, //LOAD ADDRESS 
     LOD, //LOAD FROM ADDRESS
+    IXA, //Indexed Address
+    IDL, //Indirect Load
     STO, //STORE TO ADDRESS
     MST, //MARK STACK 
     CALL, //CALL PROCEDURE 
@@ -27,8 +29,8 @@ enum vmop {
 };
 
 vector<string> instAsStr = {
-    "LBL", "LDC", "LDA", "LOD", "STO", 
-    "MST", "CALL", "ENT", "RET",
+    "LBL", "LDC", "LDA", "LOD", "IXA", "IDL", "STO", 
+    "MST", "CAL", "ENT", "RET",
     "JMP", "JEQ", "JNE", 
     "ADI", "SBI", "MPI", "DVI", "NEG",
     "EQU", "NEQ", "LT", "LTE", "GT", "GTE", 

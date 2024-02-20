@@ -7,8 +7,10 @@ using namespace std;
 vector<string> ifEx = {
     "program 'ifEx';",
     "begin",
-    "   let x := 7;",
-    "   let y := 12;",
+    "   let x: int;",
+    "   let y: int;",
+    "   x := 7;",
+    "   y := 12;",
     "   if (x < y) then",
     "       print (x+y);",
     "   end; ",
@@ -19,7 +21,8 @@ vector<string> ifEx = {
 vector<string> loopEx = {
     "program 'loopEx';",
     "begin",
-    "   int x := (1);",
+    "   let x: int;",
+    "   x := (1);",
     "   while (x < 6) begin",
     "       print (x);",
     "       x := (x + 1);",
@@ -30,21 +33,28 @@ vector<string> loopEx = {
 vector<string> noParamProcEx = {
     "program 'noparamex';",
     "begin",
-    "   int t := (1);",
+    "   let t: int;",
+    "   t := (1);",
     "   func myProc() begin",
     "       print (t);",
+    "       t := (t + 1);",
     "   end;",
-    "   myProc();",
+    "   while (t < 10) begin",
+    "       myProc();",
+    "   end;"
     "end"
 };
 
 vector<string> loop2Ex = {
     "program 'loopTwoEx';",
     "begin",
-    "   int x := 1;",
-    "   int y := 2;",
+    "   let x: int;",
+    "   let y: int;",
+    "   let j: int;",
+    "   x := 1;",
+    "   y := 2;",
     "   while (y < 20) begin",
-    "       let j := (x + y);",
+    "       j := (x + y);",
     "       print j;",
     "       x := (x + 1);",
     "       y := (y + 1);",
@@ -55,24 +65,29 @@ vector<string> loop2Ex = {
 vector<string> procEx = {
     "program 'proxEx';",
     "begin",
-    "   func myFunc(vx, vy) begin",
-    "       int q := (vx + vy);",
+    "   let t: int;",
+    "   let m: int;",
+    "   let q: int;",
+    "   func myFuncR(vx, vy) begin",
+    "       q := (vx + vy);",
     "       print (q);",
-    "       return q;",
     "   end;",
-    "   int t := (1);",
-    "   myFunc(t, (t+1));",
-    "   print (42);"
+    "   t := (7);",
+    "   m := (4);",
+    "   myFuncR(t, m);",
     "end;"
 };
 
 vector<string> procLoopEx = {
     "program procLoopEx;",
     "begin",
+    "   let p: int;",
+    "   let t: int;",
     "   func myFunc(vx, vy) begin",
-    "       print (vx+vy);",
+    "       p := (vx+vy);",
+    "       print (p);",
     "   end;",
-    "   int t := (1);",
+    "   t := (1);",
     "   while (t < 5) begin",
     "       myFunc(t, t+1);",
     "       t := (t+1);",
@@ -81,28 +96,38 @@ vector<string> procLoopEx = {
 };
 
 vector<string> recursionEx = {
-    "program recursionEx;",
+    "program 'recursionEx';",
     "begin",
-    "   func addOneAndPrint(vara) begin",
-    "       int t := (vara + 1);",
-    "       if (vara < 5) then",
-    "           print (vara);",
-    "           addOneAndPrint(t);",
-    "       end;",
+    "   let p: int;",
+    "   let c: int;",
+    "   let n: int;",
+    "   let m: int;",
+    "   p := 0;",
+    "   c := 1;",
+    "   n := 0;",
+    "   m := 1;",
+    "   while (n < 10) begin",
+    "       m := (c + p);",
+    "       p := c;",
+    "       c := m;",
+    "       n := (n + 1);",
+    "       print m;",
     "   end;",
-    "   addOneAndPrint(1);",
-    "   print (42);",
     "end"
 };
 
 vector<string> fibEx = {
     "program fibEx;",
     "begin",
-    "   int prev := (0);",
-    "   int curr := (1);",
-    "   int next := (0);",
-    "   int count := (1);",
-    "   while (count < 10) begin",
+    "   let prev: int;",
+    "   let curr: int;",
+    "   let next: int;",
+    "   let count: int;",
+    "   prev := (0);",
+    "   curr := (1);",
+    "   next := (0);",
+    "   count := (1);",
+    "   while (curr < 150) begin",
     "       count := (count + 1);",
     "       next := (curr + prev);",
     "       print (next);",
@@ -112,17 +137,51 @@ vector<string> fibEx = {
     "end"
 };
 
+vector<string> factorial = {
+    "program 'factorial';",
+    "begin"
+    "   let x: int;",
+    "   let fact: int;",
+    "   x := 5;",
+    "   fact := 1;",
+    "   while (0 < x) begin",
+    "       fact := (fact * x);",
+    "       x := (x - 1);",
+    "   end;",
+    "   print (fact);",
+    "end"
+};
+
+vector<string> arrayEx = {
+    "program 'arrayEx';",
+    "begin",
+    "   let m[10]: array;",
+    "   let c: int;",
+    "   c := 1;",
+    "   while (c < 6) begin",
+    "       m[c] := (42 + c);",
+    "       c := (c+1);",
+    "   end;",
+    "   c := 1;",
+    "   while (c < 6) begin",
+    "       print (m[c]);",
+    "       c := (c + 1);",
+    "   end;",
+    "end"
+};
 
 
 vector<vector<string>> programList = {
-        ifEx, 
-        loopEx, 
-        loop2Ex,
-        procEx, 
-        noParamProcEx,
-        procLoopEx,
-        recursionEx,
-        fibEx
+        ifEx, //0
+        loopEx, //1
+        loop2Ex,//2
+        procEx, //3
+        noParamProcEx, //4
+        procLoopEx, //5
+        recursionEx, //6
+        fibEx,        //7
+        factorial, //8
+        arrayEx //9
         };
 
 TraceLevel tl = OFF;

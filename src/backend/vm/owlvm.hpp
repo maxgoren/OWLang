@@ -1,6 +1,7 @@
 #ifndef owlvm_hpp
 #define owlvm_hpp
 #include <iostream>
+#include <iomanip>
 #include <vector>
 #include "../../frontend/lexer.hpp"
 #include "../../frontend/parser.hpp"
@@ -30,13 +31,15 @@ class OwlVM {
         void print();
         void printStack();
         void printRegisters();
-        int findParam(int n);
-        int findLocal(int n);
+        int getFromAddress(int address);
         int nopcount;
         bool didAccess;
         int ma;
         void load_constant();
+        void load_addr();
         void load_from_addr();
+        void indexed_address();
+        void indirect_load();
         void store_to_addr();
         void mark_stack();
         void call_proc();
@@ -63,7 +66,7 @@ void OwlVM::printRegisters() {
 }
 
 void OwlVM::printStack() {
-    cout<<"[ op:["<<instAsStr[currentInstruction.op]<<" "<<currentInstruction.addr<<" "<<currentInstruction.val<<"], IP: "<<IP<<", BP: "<<BP<<", SP: "<<sp<<", EP: "<<ep<<" SL: "<<stack_level<<" ";
+    cout<<"[ op:["<<setw(3)<<instAsStr[currentInstruction.op]<<" "<<setw(4)<<currentInstruction.addr<<" "<<setw(3)<<currentInstruction.val<<"], IP: "<<setw(3)<<IP<<", BP: "<<setw(3)<<BP<<", SP: "<<setw(3)<<sp<<", MA: "<<setw(3)<<ma<<" SL: "<<setw(3)<<stack_level<<" ";
     cout<<"] [ ";
     for (int i = 0; i < sp + 10; i++) {
         if (i > sp+1 && dstack[i] == 0 && dstack[i+1] == 0 && dstack[i+2] == 0 && dstack[i+3] == 0 &&dstack[i+4] == 0) {
@@ -72,10 +75,16 @@ void OwlVM::printStack() {
         if (i == BP) cout<<">|";
         if (i == sp)              cout<<"{";
         if (didAccess && i == ma) cout<<"(";
-        cout<<dstack[i];
+        int putin = dstack[i];
+        cout<<putin;
         if (didAccess && i == ma) cout<<")";
         if (i == sp)              cout<<"}";
         cout<<" ";
+    }
+    cout<<"]"<<endl;
+    cout<<"[Memory: ";
+    for (int i = 2475; i < 2500; i++) {
+        cout<<dstack[i]<<" ";
     }
     cout<<"]"<<endl;
     if (didAccess) didAccess = false;
@@ -84,8 +93,7 @@ void OwlVM::printStack() {
 void OwlVM::init() {
     stack_level = 1;
     BP = 1;
-    sp = BP+st.size();
-    cout<<sp<<endl;
+    sp = BP+1;
     IP = 0;
     ep = sp;
     nopcount = 0;
@@ -114,6 +122,9 @@ void OwlVM::repl() {
         getline(cin, input);
     } while (currentInstruction.op != HLT);
     cout<<"[OwlVM Done.]"<<endl;
+    for (int i = 2450; i < 2500; i++)
+        cout<<dstack[i]<<" ";
+    cout<<endl;
 }
 
 void OwlVM::loadProgram(vector<Instruction> code) {
@@ -132,6 +143,9 @@ void OwlVM::start(TraceLevel trace) {
         if (trace != OFF) printStack();
     } while (currentInstruction.op != HLT);
     cout<<"[OwlVM Done.]"<<endl;
+       for (int i = 2450; i < 2500; i++)
+        cout<<dstack[i]<<" ";
+    cout<<endl;
 }
 
 void OwlVM::print() {
@@ -140,26 +154,22 @@ void OwlVM::print() {
 }
 
 
-int OwlVM::findLocal(int nst) {
-    int bl = BP;
-    while (nst > 1) {
-        bl = dstack[BP];
-        nst--;
-    }
-    return stack_level == 1 ? bl:bl+5;
+int OwlVM::getFromAddress(int address) {
+    if (address > 2000)
+        return address;
+    return stack_level > 1 ? (BP-(address+1)):(dstack[BP] + address);
 }
 
 void OwlVM::mark_stack() {
-    sp++;
-   dstack[sp] = 0;
+
 }
 
 void OwlVM::ret_proc() {
+    int ra = sp;
     sp = BP-1;            //reset stack ptr
-    //sp = dstack[BP+2];  
     IP = dstack[BP+1]; //pop return address off stack
     BP = dstack[BP]; //reset frameptr;
-    dstack[sp] = 0;
+    dstack[sp] = dstack[ra];
     stack_level--;
 }
 
@@ -168,7 +178,7 @@ void OwlVM::call_proc() {
     dstack[sp+3] = IP;   
     dstack[sp+4] = sp;  
     BP = sp+2;
-    sp = BP+5;
+    sp = BP+3;
     ep = sp;
     stack_level++;
     IP = currentInstruction.addr+1; //MAKE JUMP TO PROCEDURE
@@ -182,22 +192,45 @@ void OwlVM::enter_proc() {
 void OwlVM::load_constant() {
     sp++;
     dstack[sp] = currentInstruction.val;  
+    ma = sp;
     if (sp > ep) ep = sp;
 }
 
 void OwlVM::load_from_addr() {
     sp++; 
-    ma = stack_level > 1 ? (BP-(currentInstruction.addr+1)):(findLocal(stack_level) + currentInstruction.addr);
+    ma = getFromAddress(currentInstruction.addr);
     dstack[sp] = dstack[ma]; 
     if (sp > ep) ep = sp;
     didAccess = true; 
 }
 
+void OwlVM::load_addr() {
+    sp++;
+    ma = sp;
+    dstack[sp] = getFromAddress(currentInstruction.addr);
+}
+
 void OwlVM::store_to_addr() {
-    ma = stack_level > 1 ? (BP-(currentInstruction.addr+1)):findLocal(stack_level) + currentInstruction.addr;
+    ma = getFromAddress(dstack[sp-1]);
     dstack[ma] = dstack[sp];
     didAccess = true;
     sp--;
+}
+
+void OwlVM::indexed_address() {
+    int offset = dstack[sp];
+    int badr = dstack[sp-1];
+    sp-=2;
+    ma = sp;
+    dstack[ma] = badr - offset;
+    didAccess = false;
+}
+
+void OwlVM::indirect_load() {
+    sp++;
+    ma = getFromAddress(dstack[sp-1] - currentInstruction.addr);
+    dstack[sp] = dstack[ma];
+    didAccess = true;
 }
 
 void OwlVM::executeInstruction() {
@@ -209,8 +242,17 @@ void OwlVM::executeInstruction() {
     case LOD: //LOAD FROM ADDRESS
         load_from_addr();
         break;
-    case STO:
+    case LDA: //LOAD ADDRESS
+        load_addr();
+        break;
+    case STO: //STORE TO ADDRESS
         store_to_addr();
+        break;
+    case IXA:
+        indexed_address();
+        break;
+    case IDL:
+        indirect_load();
         break;
     case MST: //MARK STACK
         mark_stack();
@@ -242,18 +284,22 @@ void OwlVM::executeInstruction() {
         //integer math
     case ADI: 
         sp--; 
+        //cout<<dstack[sp]<<" + "<<dstack[sp+1]<<endl;
         dstack[sp] = dstack[sp] + dstack[sp+1];
         break;
     case SBI: 
         sp--; 
+        //cout<<dstack[sp]<<" - "<<dstack[sp+1]<<endl;
         dstack[sp] = dstack[sp] - dstack[sp+1];
         break;
     case MPI: 
         sp--; 
+        //cout<<dstack[sp]<<" * "<<dstack[sp+1]<<endl;
         dstack[sp] = dstack[sp] * dstack[sp+1];
         break;
     case DVI:
         sp--; 
+        //cout<<dstack[sp]<<" / "<<dstack[sp+1]<<endl;
         dstack[sp] = dstack[sp] + dstack[sp+1];
         break; 
     case NEG:
@@ -269,6 +315,7 @@ void OwlVM::executeInstruction() {
         break; 
     case LT: 
         sp--; 
+        //cout<<dstack[sp]<<" < "<<dstack[sp+1]<<endl;
         dstack[sp] = (dstack[sp] < dstack[sp+1]);
         break; 
     case LTE: 
