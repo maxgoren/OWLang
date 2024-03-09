@@ -1,6 +1,8 @@
 # OWLang
 OWLang - The "One Weekend" Programming Language Project.
 
+*Primary Development of Owl has moved to https://github.com/maxgoren/OwlInterpreter
+
 ## What is OWLang?
 Besides a hoot of a good time? Owlang is a toy programming language developed for exploring the fundamentals 
 of programming language design with a focus on compiler implementation. The "One Weekend" programming language project
